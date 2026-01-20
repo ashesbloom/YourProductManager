@@ -103,18 +103,6 @@ export function Footer() {
             </ul>
           </div>
         </div>
-
-        {/* Bottom Bar
-        <div className="mt-12 pt-8 border-t border-border flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-muted-foreground text-sm">
-            © {new Date().getFullYear()} Your Product Manager. All Rights Reserved.
-          </p>
-          <div className="flex items-center gap-4">
-            <span className="text-muted-foreground text-xs">
-              Made with 💜 for aspiring PMs
-            </span>
-          </div>
-        </div> */}
       </div>
     </footer>
   )
