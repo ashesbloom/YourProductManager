@@ -3,7 +3,6 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronDown } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { FadeIn } from '@/components/animations/FadeIn'
-import { cn } from '@/lib/utils'
 
 const faqs = [
   {

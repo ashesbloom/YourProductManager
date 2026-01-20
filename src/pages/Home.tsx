@@ -8,6 +8,7 @@ import {
 } from 'lucide-react'
 import { CountUp } from '../components/animations/CountUp'
 import { VideoPreviewSection } from '../components/sections/VideoPreviewSection'
+// @ts-ignore - JSX component without type declarations
 import CurvedLoop from '../components/CurvedLoop'
 
 // Data
