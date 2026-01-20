@@ -104,7 +104,7 @@ export function Footer() {
           </div>
         </div>
 
-        {/* Bottom Bar */}
+        {/* Bottom Bar
         <div className="mt-12 pt-8 border-t border-border flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-muted-foreground text-sm">
             © {new Date().getFullYear()} Your Product Manager. All Rights Reserved.
@@ -114,7 +114,7 @@ export function Footer() {
               Made with 💜 for aspiring PMs
             </span>
           </div>
-        </div>
+        </div> */}
       </div>
     </footer>
   )
