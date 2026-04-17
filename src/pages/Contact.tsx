@@ -48,7 +48,7 @@ export default function Contact() {
             viewport={{ once: true, margin: '-100px' }}
             variants={fadeIn}
             transition={{ duration: 0.5 }}
-            className="rounded-3xl bg-white/5 border border-white/10 p-8 md:p-10"
+            className="rounded-3xl bg-[#07070c] border border-purple-500/30 shadow-[0_16px_35px_-20px_rgba(124,58,237,0.45)] p-8 md:p-10"
           >
             <h2 className="text-2xl md:text-3xl font-black">What should you send?</h2>
             <p className="mt-3 text-white/70 leading-relaxed">
@@ -57,7 +57,7 @@ export default function Contact() {
 
             <div className="mt-10 space-y-4">
               <div className="flex items-start gap-4">
-                <div className="w-11 h-11 rounded-2xl bg-primary/20 flex items-center justify-center border border-white/10 shrink-0">
+                <div className="w-11 h-11 rounded-2xl bg-primary/20 flex items-center justify-center border border-purple-500/30 shrink-0">
                   <Mail size={18} className="text-primary" />
                 </div>
                 <div>
@@ -67,7 +67,7 @@ export default function Contact() {
               </div>
 
               <div className="flex items-start gap-4">
-                <div className="w-11 h-11 rounded-2xl bg-primary/20 flex items-center justify-center border border-white/10 shrink-0">
+                <div className="w-11 h-11 rounded-2xl bg-primary/20 flex items-center justify-center border border-purple-500/30 shrink-0">
                   <User size={18} className="text-primary" />
                 </div>
                 <div>
@@ -77,7 +77,7 @@ export default function Contact() {
               </div>
             </div>
 
-            <div className="mt-10 rounded-2xl bg-black/60 border border-white/10 p-5">
+            <div className="mt-10 rounded-2xl bg-[#050508] border border-purple-500/25 p-5">
               <div className="text-sm text-white/70 leading-relaxed">
                 Note: Mock interviews are guidance-focused and don’t guarantee outcomes.
               </div>
@@ -93,7 +93,7 @@ export default function Contact() {
             transition={{ duration: 0.5, delay: 0.1 }}
             className="rounded-3xl bg-linear-to-r from-purple-600 via-indigo-600 to-purple-600 p-px"
           >
-            <div className="rounded-3xl bg-black p-8 md:p-10 border border-white/10">
+            <div className="rounded-3xl bg-[#050508] p-8 md:p-10 border border-purple-500/30">
               <h2 className="text-2xl md:text-3xl font-black">Send a message</h2>
               <p className="mt-3 text-white/70">
                 Fill this out and we’ll get back to you.

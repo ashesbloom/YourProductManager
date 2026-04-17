@@ -2,39 +2,55 @@ import { motion } from 'framer-motion'
 import { FadeIn } from '@/components/animations/FadeIn'
 
 const jobTitles = [
-  'AI Product Manager',
-  'Growth Product Manager',
-  'Associate Product Manager (APM)',
-  'Technical Product Manager',
-  'Product Strategy Analyst',
+  'AI Product Lead',
+  'Product Strategy Consultant',
+  'Chief Product Officer (CPO)',
+  'Management Consultant (Digital Strategy)',
+  'Principal Product Manager',
+  'Fractional Head of Product',
+  'VP of Product & Strategy',
+  'Technical Product Manager (TPM)',
+  'Growth Strategy Architect',
+  'Product Operations (ProdOps) Consultant',
+  'Director of Strategic Transformation',
+  'Founding Product Manager',
 ]
 
 export function JobTitlesSection() {
   return (
-    <section className="py-20">
+    <section className="pt-20 pb-0">
       <div className="container">
-        <FadeIn className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold text-foreground">
-            Your Future <span className="gradient-text">Job Titles</span>
-          </h2>
-        </FadeIn>
+        <FadeIn>
+          <div className="max-w-4xl mx-auto">
+            <div className="text-center">
+              <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-12">
+                Your Future Job Titles
+              </h2>
 
-        <FadeIn delay={0.2}>
-          <div className="flex flex-wrap justify-center gap-4">
-            {jobTitles.map((title, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, scale: 0.9 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                transition={{ delay: index * 0.1, duration: 0.3 }}
-                viewport={{ once: true }}
-                whileHover={{ scale: 1.05, y: -2 }}
-                className="px-6 py-3 rounded-full bg-card border border-border text-foreground font-medium
-                         hover:border-primary/50 hover:bg-primary/10 transition-all duration-300 cursor-default"
-              >
-                {title}
-              </motion.div>
-            ))}
+              <div className="mx-auto flex max-w-5xl flex-wrap justify-center gap-6 md:gap-8 pt-6 pb-0 -mb-8">
+                {jobTitles.map((title) => {
+                  return (
+                    <motion.div
+                      key={title}
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      whileInView={{ opacity: 1, scale: 1 }}
+                      whileHover={{ y: -4, scale: 1.05 }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.25 }}
+                      className={[
+                        'inline-flex w-fit items-center justify-center rounded-full font-semibold',
+                        'px-12 py-3 mx-1 text-xs sm:text-sm md:text-base leading-tight',
+                        'whitespace-nowrap',
+                        'bg-linear-to-br from-[#a855f7] to-[#7e22ce] text-white',
+                        'pill-outline',
+                      ].join(' ')}
+                    >
+                      {title}
+                    </motion.div>
+                  )
+                })}
+              </div>
+            </div>
           </div>
         </FadeIn>
       </div>

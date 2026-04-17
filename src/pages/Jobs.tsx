@@ -80,8 +80,8 @@ function JobCard({ job, featured }: { job: Job; featured?: boolean }) {
     <div
       className={
         featured
-          ? 'rounded-2xl border border-purple-500/40 bg-white/5 shadow-[0_12px_35px_-18px_rgba(124,58,237,0.45)] p-6'
-          : 'rounded-2xl border border-white/10 bg-white/5 shadow-sm p-6'
+          ? 'rounded-2xl border border-purple-500/45 bg-[#07070c] shadow-[0_12px_35px_-18px_rgba(124,58,237,0.55)] p-6'
+          : 'rounded-2xl border border-purple-500/25 bg-[#07070c] shadow-[0_12px_30px_-20px_rgba(124,58,237,0.3)] p-6'
       }
     >
       <div className="flex items-start justify-between gap-6">
@@ -93,10 +93,10 @@ function JobCard({ job, featured }: { job: Job; featured?: boolean }) {
             <div className="font-bold text-white truncate">{job.title}</div>
             <div className="text-sm text-white/60 truncate">{job.company}</div>
             <div className="mt-2 flex items-center gap-2 flex-wrap">
-              <span className="inline-flex items-center px-3 py-1 rounded-full bg-white/5 text-white/70 text-xs font-semibold border border-white/10">
+              <span className="inline-flex items-center px-3 py-1 rounded-full bg-purple-500/12 text-white/70 text-xs font-semibold border border-purple-500/25">
                 {job.location}
               </span>
-              <span className="inline-flex items-center px-3 py-1 rounded-full bg-white/5 text-white/70 text-xs font-semibold border border-white/10">
+              <span className="inline-flex items-center px-3 py-1 rounded-full bg-purple-500/12 text-white/70 text-xs font-semibold border border-purple-500/25">
                 {job.type}
               </span>
             </div>
@@ -208,7 +208,7 @@ export default function Jobs() {
 
             {/* Right: Sidebar cards */}
             <div className="space-y-6">
-              <div className="rounded-2xl border border-purple-500/30 bg-white/5 shadow-[0_10px_30px_-18px_rgba(124,58,237,0.45)] p-6">
+              <div className="rounded-2xl border border-purple-500/35 bg-[#07070c] shadow-[0_10px_30px_-18px_rgba(124,58,237,0.45)] p-6">
                 <div className="font-black text-white">Not Job Ready?</div>
                 <p className="mt-2 text-sm text-white/60 leading-relaxed">
                   Get a professional 1:1 resume audit and LinkedIn optimization tailored for AI PM roles.
@@ -218,7 +218,7 @@ export default function Jobs() {
                 </button>
               </div>
 
-              <div className="rounded-2xl bg-[#0a0a0f] border border-white/10 shadow-2xl p-6">
+              <div className="rounded-2xl bg-[#07070c] border border-purple-500/25 shadow-[0_16px_35px_-20px_rgba(124,58,237,0.45)] p-6">
                 <div className="font-black text-white">YPM Certified Badge</div>
                 <p className="mt-2 text-sm text-white/60 leading-relaxed">
                   Jobs with this badge prioritize YPM alumni for faster hiring.

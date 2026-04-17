@@ -38,10 +38,10 @@ export function VideoPreviewSection() {
           transition={{ duration: 0.6, delay: 0.2 }}
         >
           {/* Glow Effect Background */}
-          <div className="absolute -inset-4 bg-gradient-to-r from-primary/20 via-primary/10 to-accent/20 rounded-3xl blur-2xl opacity-50" />
+          <div className="absolute -inset-4 bg-linear-to-r from-primary/20 via-primary/10 to-accent/20 rounded-3xl blur-2xl opacity-50" />
           
           {/* Video Frame */}
-          <div className="relative rounded-2xl overflow-hidden border border-white/10 bg-secondary shadow-2xl">
+          <div className="relative rounded-2xl overflow-hidden border border-purple-500/30 bg-[#07070c] shadow-[0_20px_40px_-22px_rgba(124,58,237,0.55)]">
             {/* Aspect Ratio Container */}
             <div className="relative aspect-video">
               {/* Thumbnail/Preview */}
@@ -78,7 +78,7 @@ export function VideoPreviewSection() {
                       <span className="absolute inset-0 rounded-full bg-primary/30 blur-xl group-hover:bg-primary/40 transition-colors" />
                       
                       {/* Button */}
-                      <span className="relative flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-primary to-primary-glow">
+                      <span className="relative flex items-center justify-center w-20 h-20 rounded-full bg-linear-to-br from-primary to-primary-glow">
                         <Play size={28} className="text-white ml-1" fill="currentColor" strokeWidth={0} />
                       </span>
                     </motion.button>
@@ -116,14 +116,14 @@ export function VideoPreviewSection() {
             </div>
 
             {/* Bottom Bar */}
-            <div className="px-6 py-4 border-t border-white/5 bg-secondary/80">
+            <div className="px-6 py-4 border-t border-purple-500/20 bg-[#050508]">
               <div className="flex items-center justify-between flex-wrap gap-4">
                 <div className="flex items-center gap-3">
                   <div className="flex -space-x-2">
                     {['P', 'R', 'A'].map((initial, i) => (
                       <div 
                         key={i}
-                        className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-primary-glow flex items-center justify-center text-xs font-semibold text-foreground border-2 border-secondary"
+                        className="w-8 h-8 rounded-full bg-linear-to-br from-primary to-primary-glow flex items-center justify-center text-xs font-semibold text-foreground border-2 border-secondary"
                       >
                         {initial}
                       </div>

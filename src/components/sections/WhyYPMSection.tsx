@@ -1,4 +1,5 @@
-import { UserCheck, Star, Brain, Cpu, TrendingUp } from 'lucide-react'
+import { UserCheck, Star, Brain, Cpu, TrendingUp, Compass } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import { FadeIn } from '@/components/animations/FadeIn'
 import { StaggerContainer, StaggerItem } from '@/components/animations/StaggerContainer'
 import { GlowCard } from '@/components/animations/GlowCard'
@@ -7,31 +8,43 @@ const features = [
   {
     icon: UserCheck,
     title: 'Interview Ready',
-    description: 'Three simulated 1:1 PM interviews and a personal project review to conquer recruitment loops.',
+    description:
+      'Three simulated 1:1 PM interviews and a personal project review to conquer recruitment loops including AI-native case studies.',
     badge: null,
   },
   {
     icon: Star,
     title: 'Elite Presence',
-    description: 'Professional LinkedIn and resume optimization tailored for AI Product Manager hiring standards.',
+    description:
+      'FREE Professional LinkedIn and resume optimization to bridge the AI-talent gap and meet 2026 hiring standards.',
     badge: 'FREE',
   },
   {
     icon: Brain,
-    title: 'Built for Judgment',
-    description: 'Develop professional product intuition to navigate ambiguity rather than following rigid checklists.',
+    title: 'Strategic Judgment',
+    description:
+      'Develop the professional clarity required to navigate high-stakes ambiguity. We move you beyond rigid checklists to the calibrated intuition used by the top 1% of product leaders.',
     badge: null,
   },
   {
     icon: Cpu,
-    title: 'AI-First Strategy',
-    description: 'Master a world where AI drives decision-making, not just features.',
+    title: 'Systems-First Thinking',
+    description:
+      'Master the mental models to connect product architecture, market dynamics, and sustainable business models into a single, cohesive strategy.',
     badge: null,
   },
   {
     icon: TrendingUp,
-    title: 'Evidence Over Hype',
-    description: 'Apply the specific mental models used by the top 1% of PMs—no buzzwords, just results.',
+    title: 'Global Influence & Stakeholder Mastery',
+    description:
+      'Master the art of high-level persuasion. Learn how to align cross-functional teams, manage complex executive boardrooms, and drive consensus for high-stakes product visions across global time zones.',
+    badge: null,
+  },
+  {
+    icon: Compass,
+    title: 'The "Strategy First" Discovery',
+    description:
+      'Accelerate your trajectory with a 15-minute "Career Strategy" audit. We’ll map out your current blind spots and define a clear path to your next high-stakes leadership role.',
     badge: null,
   },
 ]
@@ -75,6 +88,12 @@ export function WhyYPMSection() {
             </StaggerItem>
           ))}
         </StaggerContainer>
+
+        <div className="mt-12 flex justify-center">
+          <Link to="/coaching" className="btn-primary btn-small text-center">
+            Schedule free 15 minute call
+          </Link>
+        </div>
       </div>
     </section>
   )

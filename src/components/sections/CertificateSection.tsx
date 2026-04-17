@@ -42,7 +42,7 @@ export function CertificateSection() {
               
               {/* Certificate Card */}
               <div className="relative glass-card p-8 text-center">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-accent-gradient flex items-center justify-center">
+                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-accent-gradient ring-2 ring-white/20 flex items-center justify-center">
                   <Award className="text-background" size={32} />
                 </div>
                 <h3 className="text-xl font-bold text-foreground mb-2">

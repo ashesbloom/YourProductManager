@@ -131,7 +131,7 @@ function LectureRow({ lecture, freeCtaLabel }: { lecture: Lecture; freeCtaLabel:
       </div>
 
       {isFree ? (
-        <button className="shrink-0 inline-flex items-center justify-center px-5 h-10 rounded-full bg-primary text-primary-foreground font-bold">
+        <button className="btn-purple-animated shrink-0 inline-flex items-center justify-center px-5 h-10 rounded-full text-primary-foreground font-bold">
           {freeCtaLabel}
         </button>
       ) : (
@@ -209,7 +209,7 @@ export default function CourseContent() {
                   <div className="mt-1 text-sm text-gray-500 font-medium">{course.priceMeta}</div>
                 </div>
 
-                <button className="mt-6 w-full h-12 rounded-xl bg-primary text-primary-foreground font-bold hover:opacity-90 transition-opacity">
+                <button className="btn-purple-animated mt-6 w-full h-12 rounded-xl text-primary-foreground font-bold hover:opacity-90 transition-opacity">
                   Enroll in Course
                 </button>
 

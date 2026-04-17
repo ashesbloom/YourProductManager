@@ -172,7 +172,7 @@ function CourseCardRow({ course }: { course: CourseCard }) {
               to={`/courses/${course.id}`}
               className={
                 isDark
-                  ? 'inline-flex items-center gap-4 px-10 py-4 rounded-full bg-[#7c3aed] text-white font-bold shadow-2xl shadow-purple-500/30 hover:bg-[#6d28d9] transition-all'
+                  ? 'btn-purple-animated inline-flex items-center gap-4 px-10 py-4 rounded-full text-white font-bold shadow-2xl shadow-purple-500/30 transition-all'
                   : 'inline-flex items-center gap-4 px-10 py-4 rounded-full bg-white text-[#7c3aed] font-bold border-2 border-[#7c3aed] hover:bg-[#7c3aed] hover:text-white transition-all'
               }
             >
@@ -188,7 +188,7 @@ function CourseCardRow({ course }: { course: CourseCard }) {
 
 export default function Courses() {
   return (
-    <div className="bg-white">
+    <div className="bg-black">
       <section className="pt-28 pb-20 px-4">
         <div className="max-w-6xl mx-auto">
           <div className="space-y-14">

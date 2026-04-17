@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { BookOpen, ArrowRight } from 'lucide-react'
+import { BookOpen, ArrowRight, Calendar, Sparkles } from 'lucide-react'
 import { FadeIn } from '@/components/animations/FadeIn'
 import { GlowCard } from '@/components/animations/GlowCard'
 
@@ -77,6 +77,30 @@ export function CoursesSection() {
               </GlowCard>
             </FadeIn>
           ))}
+        </div>
+
+        {/* Action Buttons */}
+        <div className="relative z-10 flex flex-col sm:flex-row items-center justify-center gap-4 mt-16 px-4">
+          <Link to="/apply" className="w-full sm:w-auto">
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="w-full sm:w-auto px-8 py-4 rounded-xl bg-purple-600 text-white font-bold flex items-center justify-center gap-2 shadow-lg shadow-purple-500/20 hover:bg-purple-500 transition-all"
+            >
+              <Sparkles size={20} />
+              APPLY NOW
+            </motion.button>
+          </Link>
+          <Link to="/schedule" className="w-full sm:w-auto">
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="w-full sm:w-auto px-8 py-4 rounded-xl bg-transparent border-2 border-primary/30 hover:border-primary text-primary font-bold flex items-center justify-center gap-2 transition-all"
+            >
+              <Calendar size={20} />
+              SCHEDULE 1:1 CALL
+            </motion.button>
+          </Link>
         </div>
       </div>
     </section>

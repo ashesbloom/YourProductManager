@@ -25,7 +25,7 @@ const posts = [
 
 export default function Blog() {
   return (
-    <div className="bg-background text-foreground">
+    <div className="bg-black text-foreground min-h-screen">
       <section className="pt-28 pb-10">
         <div className="max-w-6xl mx-auto px-4">
           <motion.div
@@ -50,7 +50,7 @@ export default function Blog() {
             {posts.map((post) => (
               <div
                 key={post.title}
-                className="rounded-2xl border border-white/10 bg-white/5 p-5"
+                className="rounded-2xl border border-purple-500/45 bg-black p-5 transition-all duration-300 hover:-translate-y-1 hover:border-purple-400 hover:shadow-[0_18px_38px_-20px_rgba(168,85,247,0.75)]"
               >
                 <div className="text-sm text-muted-foreground">{post.meta}</div>
                 <div className="mt-2 font-bold text-foreground">{post.title}</div>

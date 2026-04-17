@@ -16,7 +16,7 @@ export function GlowCard({
   return (
     <motion.div
       className={cn(
-        'relative group rounded-2xl bg-card border border-border p-6',
+        'relative group rounded-2xl bg-[#07070c] border border-purple-500/25 shadow-[0_14px_30px_-20px_rgba(124,58,237,0.4)] p-6',
         'transition-all duration-300',
         className
       )}

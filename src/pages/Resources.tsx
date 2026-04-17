@@ -50,9 +50,9 @@ export default function Resources() {
             {resources.map((item) => (
               <div
                 key={item.title}
-                className="rounded-2xl border border-white/10 bg-white/5 p-5"
+                className="rounded-2xl border border-purple-500/25 bg-[#07070c] shadow-[0_12px_30px_-18px_rgba(124,58,237,0.45)] p-5"
               >
-                <div className="inline-flex items-center px-3 py-1 rounded-full bg-white/10 text-xs font-semibold text-muted-foreground">
+                <div className="inline-flex items-center px-3 py-1 rounded-full bg-purple-500/15 border border-purple-500/25 text-xs font-semibold text-muted-foreground">
                   {item.tag}
                 </div>
                 <div className="mt-3 font-bold text-foreground">{item.title}</div>

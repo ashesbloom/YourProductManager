@@ -61,7 +61,7 @@ export function HeroSection() {
                       end={stat.value}
                       prefix={stat.prefix}
                       suffix={stat.suffix}
-                      duration={2}
+                      duration={2.6}
                     />
                   </div>
                   <div className="text-sm text-muted-foreground mt-1">
