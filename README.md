@@ -30,8 +30,18 @@ Lecture ids are permanent (R2 keys and progress rows use them). Never renumber a
 
 ```bash
 npm run db:migrate:remote
+for k in RAZORPAY_KEY_ID RAZORPAY_KEY_SECRET RAZORPAY_WEBHOOK_SECRET RESEND_API_KEY TURNSTILE_SECRET GOOGLE_CLIENT_ID GOOGLE_CLIENT_SECRET; do
+  npx wrangler secret put "$k"
+done
 npm run deploy
 ```
+
+Before taking payments:
+
+- `RESEND_API_KEY` must be set in production. Without it, login codes are written to Workers Logs instead of being emailed.
+- Razorpay → Account & Settings → **Payment capture: automatic**. Access is granted on a verified payment signature, which Razorpay also issues for authorized-but-uncaptured payments; manual capture would let an uncaptured (later auto-refunded) payment keep access.
+- Razorpay → Webhooks: URL `https://<domain>/api/razorpay/webhook`, secret = `RAZORPAY_WEBHOOK_SECRET`, events `order.paid`, `payment.failed`, `refund.processed`.
+- `wrangler.jsonc` → replace the placeholder `database_id` with the one from `wrangler d1 create ypm --location apac`.
 
 ## Manual admin (until the admin panel exists)
 

@@ -3,6 +3,7 @@ import { Navigate, useNavigate, useSearchParams } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import { api, ApiError, loadScript } from '@/lib/api'
 import { useMe } from '@/lib/me'
+import { safeNext } from '@/lib/links'
 import { btnGhost, btnPrimary, input } from '@/components/ui'
 
 type Turnstile = {
@@ -27,7 +28,7 @@ function storedUtm(): string | null {
 
 export default function Login() {
   const [params] = useSearchParams()
-  const next = params.get('next') ?? '/dashboard'
+  const next = safeNext(params.get('next'))
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const { data: me } = useMe()

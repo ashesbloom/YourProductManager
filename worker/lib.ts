@@ -23,9 +23,7 @@ export function randomToken(bytes = 32): string {
 
 export const randomCode = () => String(crypto.getRandomValues(new Uint32Array(1))[0] % 1_000_000).padStart(6, '0')
 
-/** Same-site path to land on after login. Blocks `//host` and `/\host` open redirects. */
-export const safeNext = (next: string | null | undefined, fallback = '/dashboard') =>
-  next && next.startsWith('/') && !next.startsWith('//') && !next.startsWith('/\\') ? next : fallback
+export { safeNext } from '../src/lib/links.ts'
 
 export const isEmail = (s: string) => s.length <= 254 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s)
 

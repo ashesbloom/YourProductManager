@@ -55,10 +55,18 @@ function testDb(): D1Database {
   })
   return {
     prepare: (sql: string) => stmt(sql),
+    // Transactional, like D1: a failing statement rolls back the whole batch.
     batch: async (stmts: Array<{ run: () => Promise<unknown> }>) => {
-      const out = []
-      for (const s of stmts) out.push(await s.run())
-      return out
+      db.exec('BEGIN')
+      try {
+        const out = []
+        for (const s of stmts) out.push(await s.run())
+        db.exec('COMMIT')
+        return out
+      } catch (err) {
+        db.exec('ROLLBACK')
+        throw err
+      }
     },
   } as unknown as D1Database
 }
@@ -96,6 +104,8 @@ test('lib: safeNext only allows same-site paths', () => {
   assert.equal(safeNext('/\\evil.com'), '/dashboard')
   assert.equal(safeNext('https://evil.com'), '/dashboard')
   assert.equal(safeNext(null), '/dashboard')
+  assert.equal(safeNext('/\t/evil.com'), '/dashboard') // browsers strip tabs: would become //evil.com
+  assert.equal(safeNext('/learn/x?y=1#z'), '/learn/x?y=1#z')
 })
 
 test('lib: isEmail', () => {
@@ -330,4 +340,27 @@ test('progress: completes once at 85% across sessions; seeking adds nothing; res
   assert.equal(n, 1)
   const { position_s } = (await db.prepare(`SELECT position_s FROM progress`).first()) as { position_s: number }
   assert.equal(position_s, 10)
+})
+
+test('pay: a failure while granting leaves the order retryable (no paid-without-access)', async () => {
+  const db = testDb()
+  await seedOrder(db, 'order_A', 'foundations')
+  await db.prepare(`CREATE TRIGGER boom BEFORE INSERT ON enrollments BEGIN SELECT RAISE(ABORT, 'boom'); END`).run()
+  await assert.rejects(fulfill(db, 'order_A', 'pay_1', 1))
+  await db.prepare(`DROP TRIGGER boom`).run()
+  assert.ok(await fulfill(db, 'order_A', 'pay_1', 2)) // the webhook retry repairs it
+  assert.deepEqual(await active(db), ['foundations'])
+})
+
+test('pay: a failure while revoking leaves the refund retryable', async () => {
+  const db = testDb()
+  await seedOrder(db, 'order_A', 'foundations')
+  await fulfill(db, 'order_A', 'pay_A', 1)
+  await db.prepare(`CREATE TRIGGER boom BEFORE UPDATE ON enrollments BEGIN SELECT RAISE(ABORT, 'boom'); END`).run()
+  await assert.rejects(refund(db, 'pay_A', 2))
+  await db.prepare(`DROP TRIGGER boom`).run()
+  await refund(db, 'pay_A', 3)
+  assert.deepEqual(await active(db), [])
+  const { n } = (await db.prepare(`SELECT COUNT(*) AS n FROM events WHERE type = 'refund'`).first()) as { n: number }
+  assert.equal(n, 1)
 })
