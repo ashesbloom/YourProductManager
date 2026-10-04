@@ -1,5 +1,5 @@
 import { Suspense, lazy, useEffect, type ReactNode } from 'react'
-import { Routes, Route, useLocation } from 'react-router-dom'
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
 import { useScrollReveal } from '@/hooks/useScrollReveal'
@@ -17,6 +17,9 @@ const Verify = lazy(() => import('@/pages/Verify'))
 const Login = lazy(() => import('@/pages/Login'))
 const Dashboard = lazy(() => import('@/pages/Dashboard'))
 const Learn = lazy(() => import('@/pages/Learn'))
+const RefundPolicy = lazy(() => import('@/pages/RefundPolicy'))
+const DeliveryPolicy = lazy(() => import('@/pages/DeliveryPolicy'))
+const NotFound = lazy(() => import('@/pages/NotFound'))
 
 /**
  * Sits inside <Suspense> so its effect runs once the lazy page below it has
@@ -63,6 +66,12 @@ function App() {
               <Route path="/learn/:courseId/:lectureId" element={<Learn />} />
               <Route path="/blog" element={<Blog />} />
               <Route path="/resources" element={<Resources />} />
+              <Route path="/refund-policy" element={<RefundPolicy />} />
+              <Route path="/delivery-policy" element={<DeliveryPolicy />} />
+              {/* Home links to these; real pages arrive in Phase 2 / the UI overhaul. */}
+              <Route path="/coaching" element={<Navigate to="/contact" replace />} />
+              <Route path="/apply" element={<Navigate to="/courses" replace />} />
+              <Route path="*" element={<NotFound />} />
             </Routes>
           </RevealScope>
         </Suspense>
