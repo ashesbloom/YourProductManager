@@ -73,10 +73,6 @@
   position: relative;
 }
 
-.active-dot {
-  display: none;
-}
-
 .pill-list > li {
   display: flex;
   height: auto;
@@ -166,27 +162,11 @@
     linear-gradient(120deg, #c084fc 0%, #f472b6 100%) border-box;
 }
 
-.pill .hover-circle {
-  display: none;
-}
-
-.pill .label-stack {
-  position: relative;
-  display: inline-block;
-  line-height: 1;
-  z-index: 2;
-}
-
 .pill .pill-label {
   position: relative;
   z-index: 2;
   display: inline-block;
   line-height: 1;
-  will-change: transform;
-}
-
-.pill .pill-label-hover {
-  display: none;
 }
 
 .desktop-only {

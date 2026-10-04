@@ -1,11 +1,5 @@
 import { Link } from 'react-router-dom'
-import { motion } from 'framer-motion'
 import { ArrowRight, BookOpen, Sparkles } from 'lucide-react'
-
-const fadeIn = {
-  hidden: { opacity: 0, y: 24 },
-  visible: { opacity: 1, y: 0 },
-}
 
 type CourseCard = {
   id: string
@@ -14,11 +8,11 @@ type CourseCard = {
   theme: 'light' | 'dark'
   badge: string
   title: string
-  description: string
   metaLeft: string
   metaRight: string
   oldPrice?: string
   price: string
+  priceLabel: string
   priceSuffix?: string
   note?: string
 }
@@ -31,12 +25,11 @@ const courses: CourseCard[] = [
     theme: 'light',
     badge: 'FOUNDING PRICE',
     title: 'PRODUCT MANAGEMENT\n(FOUNDATIONS)',
-    description:
-      'Build your PM fundamentals from scratch. Perfect for beginners and\n      early-career professionals. Recorded lectures only, self-paced format.',
     metaLeft: '16 Lectures',
     metaRight: '1 Free Lecture',
-    oldPrice: '₹9,000',
-    price: '₹2,300/-',
+    oldPrice: '₹6,999',
+    price: '₹2,999',
+    priceLabel: 'Introductory price',
     priceSuffix: '(incl. GST)',
     note: 'Recorded lectures only, self-paced format',
   },
@@ -47,12 +40,11 @@ const courses: CourseCard[] = [
     theme: 'dark',
     badge: 'FOUNDING PRICE',
     title: 'AI PRODUCT MANAGEMENT',
-    description:
-      'Master the art of building AI-first products with the "Vision Enhancer"\n      curriculum. Lecture-based, recorded, and self-paced learning.',
     metaLeft: '50 Lectures',
     metaRight: '3 Free Lectures',
-    oldPrice: '₹35,000',
-    price: '₹7,999/-',
+    oldPrice: '₹29,999',
+    price: '₹11,999',
+    priceLabel: 'Launch price',
     priceSuffix: '(incl. GST)',
     note: 'No live mentoring, no 1:1 support, no placement guarantees',
   },
@@ -67,18 +59,13 @@ function CourseCardRow({ course }: { course: CourseCard }) {
   const isDark = course.theme === 'dark'
 
   return (
-    <motion.div
+    <div data-reveal
       id={course.id}
       className={
         isDark
           ? 'rounded-[2rem] overflow-hidden border border-white/10 bg-[#0a0a0f] shadow-2xl'
           : 'rounded-[2rem] overflow-hidden border border-purple-200/60 bg-white shadow-2xl'
       }
-      initial="hidden"
-      whileInView="visible"
-      viewport={{ once: true, margin: '-100px' }}
-      variants={fadeIn}
-      transition={{ duration: 0.4 }}
     >
       <div className="grid grid-cols-1 md:grid-cols-[360px_1fr]">
         {/* Left panel */}
@@ -131,10 +118,6 @@ function CourseCardRow({ course }: { course: CourseCard }) {
             ))}
           </h1>
 
-          <p className={isDark ? 'mt-5 text-white/70 leading-relaxed max-w-2xl' : 'mt-5 text-gray-600 leading-relaxed max-w-2xl'}>
-            {course.description}
-          </p>
-
           <div className={isDark ? 'mt-6 flex items-center gap-8 text-white/70' : 'mt-6 flex items-center gap-8 text-gray-500'}>
             <div className="flex items-center gap-2">
               <BookOpen size={18} className={isDark ? 'text-white/60' : 'text-gray-500'} />
@@ -145,7 +128,10 @@ function CourseCardRow({ course }: { course: CourseCard }) {
             </div>
           </div>
 
-          <div className="mt-8 flex items-end gap-4 flex-wrap">
+          <div className={isDark ? 'mt-8 text-xs font-semibold uppercase tracking-[0.18em] text-[#FBBF24]/70' : 'mt-8 text-xs font-semibold uppercase tracking-[0.18em] text-[#7c3aed]'}>
+            {course.priceLabel}
+          </div>
+          <div className="mt-2 flex items-end gap-4 flex-wrap">
             {course.oldPrice ? (
               <span className={isDark ? 'text-white/30 line-through text-xl font-semibold' : 'text-gray-400 line-through text-xl font-semibold'}>
                 {course.oldPrice}
@@ -182,7 +168,7 @@ function CourseCardRow({ course }: { course: CourseCard }) {
           </div>
         </div>
       </div>
-    </motion.div>
+    </div>
   )
 }
 

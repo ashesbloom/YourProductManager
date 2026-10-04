@@ -4,10 +4,10 @@ import PillNav from '@/components/PillNav'
 const navLinks = [
   { href: '/', label: 'Home' },
   { href: '/courses', label: 'Courses' },
-  { href: '/contact', label: 'Contact' },
-  { href: '/jobs', label: 'Jobs' },
+  { href: '/about', label: 'About' },
   { href: '/blog', label: 'Blog' },
   { href: '/resources', label: 'Resources' },
+  { href: '/contact', label: 'Contact' },
   { href: '/login', label: 'Login' },
 ]
 
@@ -28,7 +28,6 @@ export function Navbar() {
         pillColor="#fde7ff"
         hoveredPillTextColor="#ffffff"
         pillTextColor="#3a0f53"
-        initialLoadAnimation={false}
       />
       <div className="w-full flex justify-center pointer-events-none select-none">
         <div

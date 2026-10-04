@@ -1,150 +1,112 @@
 import { Link } from 'react-router-dom'
-import { Mail, Phone, Linkedin, Youtube, X, MessageCircle } from 'lucide-react'
+import { ArrowUpRight, Linkedin, Mail, MessageCircle, Phone, Youtube, X } from 'lucide-react'
+import { CALENDLY_URL, SUPPORT_EMAIL, WHATSAPP_URL } from '@/lib/links'
 
-const quickLinks = [
-  { href: '/courses', label: 'Courses' },
-  { href: '/coaching', label: '1:1 Coaching' },
-  { href: '/jobs', label: 'Job Board' },
-  { href: '/learnings', label: 'Learnings' },
-  { href: '/#faq', label: 'FAQ' },
+const columns = [
+  {
+    heading: 'Explore',
+    links: [
+      { href: '/courses', label: 'Courses' },
+      { href: '/about', label: 'About' },
+      { href: '/blog', label: 'Blog' },
+      { href: '/resources', label: 'Resources' },
+    ],
+  },
+  {
+    heading: 'Legal',
+    links: [
+      { href: '/privacy', label: 'Privacy Policy' },
+      { href: '/terms', label: 'Terms & Conditions' },
+      { href: '/verify', label: 'Certificate Verification' },
+    ],
+  },
 ]
 
-const legalLinks = [
-  { href: '/privacy', label: 'Privacy Policy' },
-  { href: '/terms', label: 'Terms of Service' },
-  { href: '/verify', label: 'Certificate Verification' },
+const socials = [
+  { href: 'https://www.linkedin.com/', label: 'LinkedIn', icon: Linkedin },
+  { href: 'https://www.youtube.com/', label: 'YouTube', icon: Youtube },
+  { href: 'https://x.com/', label: 'X', icon: X },
 ]
+
+const headingClass = 'text-xs font-semibold uppercase tracking-[0.18em] text-white/40'
+const linkClass = 'text-sm text-white/65 transition-colors hover:text-white'
 
 export function Footer() {
   return (
-    <footer className="bg-background text-foreground border-t border-white/10">
-      <div className="container py-3">
-        <div className="overflow-x-auto">
-          <div className="min-w-225 grid grid-cols-5 gap-5">
-          {/* Brand */}
-          <div className="lg:col-span-1">
-            <Link to="/" className="flex items-start gap-4">
-              <div className="w-8 h-8 bg-white rounded-sm shrink-0" aria-hidden="true" />
+    <footer className="border-t border-white/10 bg-background">
+      <div className="container py-14">
+        <div className="grid grid-cols-2 gap-x-6 gap-y-10 md:grid-cols-[1.3fr_1fr_1fr_1.3fr]">
+          <div className="col-span-2 md:col-span-1">
+            <Link to="/" className="inline-flex items-center gap-3" aria-label="Your Product Manager home">
+              <img src="/vite.svg" alt="" className="h-8 w-8" />
+              <span className="font-['Montserrat'] text-sm font-black uppercase tracking-wide text-white/90">
+                Your Product Manager
+              </span>
             </Link>
-            <p className="mt-2 text-muted-foreground text-sm leading-snug max-w-xs">
-              Your Product Manager — The
-              <br />
-              Vision Enhancer for ambitious
-              <br />
-              professionals.
-            </p>
-          </div>
-
-          {/* Quick Links */}
-          <div>
-            <h4 className="text-base font-bold">Quick Links</h4>
-            <ul className="mt-1 space-y-1">
-              {quickLinks.map((link) => (
-                <li key={link.href}>
-                  <Link
-                    to={link.href}
-                    className="text-muted-foreground hover:text-foreground transition-colors text-sm"
-                  >
-                    {link.label}
-                  </Link>
-                </li>
+            <div className="mt-6 flex items-center gap-x-3">
+              {socials.map(({ href, label, icon: Icon }) => (
+                <a
+                  key={label}
+                  href={href}
+                  target="_blank"
+                  rel="noreferrer"
+                  aria-label={label}
+                  className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 text-white/60 transition-colors hover:border-primary/50 hover:text-white"
+                >
+                  <Icon size={16} />
+                </a>
               ))}
-            </ul>
-          </div>
-
-          {/* Help */}
-          <div>
-            <div className="flex items-center gap-3">
-              <span className="text-base font-bold">Help</span>
             </div>
-            <p className="mt-1 text-muted-foreground text-sm leading-snug max-w-xs">
-              Have a question or need help
-              <br />
-              choosing the right course?
-            </p>
-
-            <a
-              href="#"
-              className="mt-1 inline-flex items-center justify-center gap-3 h-8 px-4 rounded-lg bg-green-600 text-white font-bold hover:bg-green-500 transition-colors w-full sm:w-auto"
-            >
-              <MessageCircle size={16} />
-              WhatsApp Support
-            </a>
-
-            <a
-              href="mailto:support@yourpm.in"
-              className="mt-1 flex items-center gap-3 text-muted-foreground hover:text-foreground transition-colors text-sm"
-            >
-              <Mail size={16} className="text-muted-foreground" />
-              support@yourpm.in
-            </a>
           </div>
 
-          {/* Contact Us */}
-          <div>
-            <h4 className="text-base font-bold">Contact Us</h4>
-            <Link
-              to="/coaching"
-              className="btn-purple-animated mt-1 inline-flex items-center justify-center gap-3 h-8 px-4 rounded-lg text-primary-foreground font-bold hover:opacity-90 transition-opacity w-full"
-            >
-              <Phone size={16} />
-              Schedule a Call
-            </Link>
-          </div>
+          {columns.map((col) => (
+            <nav key={col.heading} aria-label={col.heading}>
+              <h4 className={headingClass}>{col.heading}</h4>
+              <ul className="mt-4 space-y-3">
+                {col.links.map((link) => (
+                  <li key={link.href}>
+                    <Link to={link.href} className={linkClass}>
+                      {link.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+          ))}
 
-          {/* Legal */}
-          <div>
-            <h4 className="text-base font-bold">Legal</h4>
-            <ul className="mt-1 space-y-1">
-              {legalLinks.map((link) => (
-                <li key={link.href}>
-                  <Link
-                    to={link.href}
-                    className="text-muted-foreground hover:text-foreground transition-colors text-sm"
-                  >
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
+          <div className="col-span-2 md:col-span-1">
+            <h4 className={headingClass}>Get in touch</h4>
+            <ul className="mt-4 space-y-3">
+              <li>
+                <a
+                  href={CALENDLY_URL}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="group inline-flex items-center gap-x-2 text-sm font-semibold text-[#c084fc] transition-colors hover:text-white"
+                >
+                  <Phone size={15} />
+                  Schedule a 1:1 Call
+                  <ArrowUpRight size={14} className="transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+                </a>
+              </li>
+              <li>
+                <a href={WHATSAPP_URL} target="_blank" rel="noreferrer" className={`inline-flex items-center gap-x-2 ${linkClass}`}>
+                  <MessageCircle size={15} />
+                  WhatsApp Support
+                </a>
+              </li>
+              <li>
+                <a href={`mailto:${SUPPORT_EMAIL}`} className={`inline-flex items-center gap-x-2 ${linkClass}`}>
+                  <Mail size={15} />
+                  {SUPPORT_EMAIL}
+                </a>
+              </li>
             </ul>
-          </div>
           </div>
         </div>
 
-        <div className="mt-2 border-t border-white/10 pt-2 flex flex-col md:flex-row items-start md:items-center justify-between gap-2">
-          <div className="text-muted-foreground text-sm">
-            © 2026 Your Product Manager. All Rights Reserved.
-          </div>
-
-          <div className="flex items-center gap-4">
-            <a
-              href="https://www.linkedin.com/"
-              target="_blank"
-              rel="noreferrer"
-              aria-label="LinkedIn"
-              className="w-7 h-7 rounded-md bg-white/10 hover:bg-white/15 transition-colors flex items-center justify-center"
-            >
-              <Linkedin size={15} />
-            </a>
-            <a
-              href="https://www.youtube.com/"
-              target="_blank"
-              rel="noreferrer"
-              aria-label="YouTube"
-              className="w-7 h-7 rounded-md bg-white/10 hover:bg-white/15 transition-colors flex items-center justify-center"
-            >
-              <Youtube size={15} />
-            </a>
-            <a
-              href="https://x.com/"
-              target="_blank"
-              rel="noreferrer"
-              aria-label="X"
-              className="w-7 h-7 rounded-md bg-white/10 hover:bg-white/15 transition-colors flex items-center justify-center"
-            >
-              <X size={15} />
-            </a>
-          </div>
+        <div className="mt-12 border-t border-white/10 pt-6 text-xs text-white/40">
+          © {new Date().getFullYear()} Your Product Manager. All Rights Reserved.
         </div>
       </div>
     </footer>

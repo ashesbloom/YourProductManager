@@ -1,5 +1,4 @@
 import { motion } from 'framer-motion'
-import { FadeIn } from '@/components/animations/FadeIn'
 
 const jobTitles = [
   'AI Product Lead',
@@ -20,8 +19,7 @@ export function JobTitlesSection() {
   return (
     <section className="pt-20 pb-0">
       <div className="container">
-        <FadeIn>
-          <div className="max-w-4xl mx-auto">
+        <div data-reveal className="max-w-4xl mx-auto">
             <div className="text-center">
               <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-12">
                 Your Future Job Titles
@@ -32,10 +30,7 @@ export function JobTitlesSection() {
                   return (
                     <motion.div
                       key={title}
-                      initial={{ opacity: 0, scale: 0.95 }}
-                      whileInView={{ opacity: 1, scale: 1 }}
                       whileHover={{ y: -4, scale: 1.05 }}
-                      viewport={{ once: true }}
                       transition={{ duration: 0.25 }}
                       className={[
                         'inline-flex w-fit items-center justify-center rounded-full font-semibold',
@@ -51,8 +46,7 @@ export function JobTitlesSection() {
                 })}
               </div>
             </div>
-          </div>
-        </FadeIn>
+        </div>
       </div>
     </section>
   )

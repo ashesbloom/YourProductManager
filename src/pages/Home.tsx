@@ -1,19 +1,23 @@
 import { Link } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { 
   ArrowRight, UserCheck, Star, Brain, Cpu, TrendingUp, 
   Award, CheckCircle, Quote, Clock, User, Phone, Briefcase,
   ChevronLeft, ChevronRight, Shield, ChevronDown, Compass, MessageSquare,
-  Target, Mic2
+  BadgeCheck, Linkedin, Download,
+  Target, Mic2, Calendar
 } from 'lucide-react'
 import { CountUp } from '../components/animations/CountUp'
+import { LockedCertificate } from '../components/CertificateCard'
 import RotatingText from '../components/animations/RotatingText'
-import { VideoPreviewSection } from '../components/sections/VideoPreviewSection'
+import { ReelsSection } from '../components/sections/ReelsSection'
 import { JobTitlesSection } from '../components/sections/JobTitlesSection'
 import countriesBadgeImage from '../assets/Group 3.png'
 // @ts-ignore - JSX component without type declarations
 import CurvedLoop from '../components/CurvedLoop'
+import { CALENDLY_URL, WHATSAPP_URL } from '../lib/links'
 
 const CAREER_GAP_OTHER_COUNTRIES: Array<{
   country: string
@@ -71,18 +75,86 @@ const features = [
   },
 ]
 
-const courses = [
-  { badge: 'FLAGSHIP', title: 'AI PRODUCT MANAGEMENT', description: 'Master AI-first products.', lectures: 50 },
-  { badge: 'FOUNDATION', title: 'PM BASICS', description: 'Build PM fundamentals.', lectures: 20 },
+const PATH_COLUMNS = ['Self-Paced Course', '1:1 Coaching', 'Mock Interviews'] as const
+
+const PATH_COMPARISON: Array<{ label: string; values: [string, string, string] }> = [
+  {
+    label: 'Format',
+    values: [
+      'Recorded, lecture-based learning',
+      'Private, live strategy sessions',
+      'Live 1:1 interview simulations',
+    ],
+  },
+  {
+    label: 'Interaction Level',
+    values: ['Independent learning', 'Direct founder access', 'Real-time performance feedback'],
+  },
+  {
+    label: 'Personalization',
+    values: [
+      'Structured curriculum',
+      'Fully personalized engagement',
+      'Aligned to your target role & domain',
+    ],
+  },
+  {
+    label: 'Focus Area',
+    values: [
+      'Product fundamentals & structured thinking',
+      'Strategic clarity & decision-making depth',
+      'Interview performance & answer structuring',
+    ],
+  },
+  {
+    label: 'Best For',
+    values: [
+      'Beginners & career transitioners',
+      'Professionals seeking accelerated growth',
+      'Candidates preparing for PM interviews',
+    ],
+  },
+  { label: 'Duration', values: ['Self-paced', 'Custom engagement length', 'Session-based'] },
+  {
+    label: 'Feedback',
+    values: ['Conceptual understanding', 'Direct strategic feedback', 'Detailed interview critique'],
+  },
+  {
+    label: 'Outcome',
+    values: [
+      'Strong product foundation',
+      'Elevated strategic judgment',
+      'Improved confidence & structured responses',
+    ],
+  },
 ]
 
-const alumni = [
-  { name: 'Priya S.', role: 'Senior PM', company: 'Google', initial: 'P' },
-  { name: 'Rahul K.', role: 'Product Lead', company: 'Microsoft', initial: 'R' },
-  { name: 'Ananya M.', role: 'AI PM', company: 'Meta', initial: 'A' },
-  { name: 'Vikram R.', role: 'Tech PM', company: 'Amazon', initial: 'V' },
-  { name: 'Neha G.', role: 'Group PM', company: 'Flipkart', initial: 'N' },
+const CERTIFICATE_CRITERIA = [
+  'Complete 50 lectures',
+  'Pass evaluations',
+  'Mock interviews',
+  'Case study',
 ]
+
+const courses = [
+  {
+    badge: 'FLAGSHIP',
+    title: 'AI PRODUCT MANAGEMENT',
+    description: 'Master AI-first products.',
+    lectures: 50,
+    hours: '25+',
+    isFeatured: true,
+  },
+  {
+    badge: 'FOUNDATION',
+    title: 'PM BASICS',
+    description: 'Build PM fundamentals.',
+    lectures: 20,
+    hours: '10+',
+    isFeatured: false,
+  },
+]
+
 
 const testimonials = [
   { quote: 'From software engineer to AI PM at a Series B startup in 4 months.', author: 'Arjun S.' },
@@ -90,20 +162,6 @@ const testimonials = [
   { quote: 'Best investment in my career. Now leading a team of 5 PMs.', author: 'Karthik R.' },
 ]
 
-const courseData = [
-  { 
-    title: 'AI PRODUCT MANAGEMENT', 
-    lectures: '50 LECTURES', 
-    duration: 'TOTAL HOURS: 25+',
-    isFeatured: true 
-  },
-  { 
-    title: 'PRODUCT MANAGEMENT BASICS', 
-    lectures: '20 LECTURES', 
-    duration: 'TOTAL HOURS: 10+',
-    isFeatured: false 
-  },
-]
 
 const mockInterviewFeatures = [
   {
@@ -309,6 +367,21 @@ function FAQItem({ faq, index }: { faq: { q: string; a: string }; index: number 
 
 export default function Home() {
   const rotatingCountryCards = CAREER_GAP_HERO.slice(2)
+  const [certificateUnlocked, setCertificateUnlocked] = useState(false)
+  const certificateSectionRef = useRef<HTMLElement>(null)
+
+  // The certificate unlocks as the section comes into view rather than from a click.
+  // Everything it drives (blur lift, criteria ticks, ID fade) is already a CSS
+  // transition on this flag, so ScrollTrigger only has to supply the moment.
+  useEffect(() => {
+    const trigger = ScrollTrigger.create({
+      trigger: certificateSectionRef.current,
+      start: 'top 55%',
+      once: true,
+      onEnter: () => setCertificateUnlocked(true),
+    })
+    return () => trigger.kill()
+  }, [])
   const [activeCountryCardIndex, setActiveCountryCardIndex] = useState(0)
   const [cardTransitionDirection, setCardTransitionDirection] = useState<1 | -1>(1)
   const [isManualControlActive, setIsManualControlActive] = useState(false)
@@ -552,13 +625,8 @@ export default function Home() {
 
           {/* Right Column: Lead Capture Form */}
           <div className="w-full">
-            <motion.div
+            <div data-reveal
               className="relative rounded-3xl border border-purple-500/45 bg-gradient-to-br from-[#18102a] via-[#0a0a14] to-[#1a1333] overflow-hidden shadow-2xl shadow-purple-900/40 ring-1 ring-purple-700/30 transition-all duration-300 hover:border-purple-400 hover:shadow-[0_20px_60px_-10px_rgba(139,92,246,0.55),0_2px_16px_0_rgba(0,0,0,0.25)] hover:ring-2 hover:ring-purple-400/40"
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true }}
-              variants={fadeIn}
-              transition={{ duration: 0.6 }}
             >
               <div className="absolute inset-1 rounded-4xl border border-purple-500/20 pointer-events-none" />
               <div className="absolute inset-0 bg-gradient-to-br from-purple-700/10 via-black/0 to-purple-900/10 pointer-events-none" />
@@ -623,7 +691,7 @@ export default function Home() {
                   </div>
                 </div>
               </div>
-            </motion.div>
+            </div>
 
             <div className="mt-6 grid grid-cols-2 gap-4">
               <div className="relative rounded-3xl border border-purple-500/45 bg-black px-6 py-6 flex flex-col items-center justify-center text-center overflow-hidden transition-all duration-300 hover:border-purple-400 hover:shadow-[0_12px_36px_-18px_rgba(168,85,247,0.75)]">
@@ -700,30 +768,19 @@ export default function Home() {
 
       {/* ═══════════════ FEATURES ═══════════════ */}
       <section className="container py-24 overflow-hidden">
-        <motion.div
+        <div data-reveal
           className="text-center mb-16 px-4"
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: "-100px" }}
-          variants={fadeIn}
-          transition={{ duration: 0.5 }}
         >
-          <span className="text-primary text-sm font-semibold uppercase tracking-wider">Strategic Excellence</span>
-          <h2 className="text-3xl md:text-5xl font-extrabold text-foreground mt-2 tracking-tight wrap-break-word">
-            Your Complete PM Toolkit
+          <h2 className="text-3xl md:text-5xl font-extrabold text-foreground tracking-tight wrap-break-word">
+            Why Your Product Manager?
           </h2>
-        </motion.div>
+        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 px-4">
           {features.map((feature, i) => (
-            <motion.div
+            <div data-reveal
               key={i}
               className="glass-card p-8 relative border border-white/5 hover:border-primary/20 transition-all group overflow-hidden"
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true, margin: "-50px" }}
-              variants={fadeIn}
-              transition={{ duration: 0.4, delay: i * 0.1 }}
             >
               {feature.badge && (
                 <span className="absolute top-4 right-4 text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full font-bold uppercase tracking-widest border border-primary/20">
@@ -739,7 +796,7 @@ export default function Home() {
               <p className="text-sm md:text-base text-muted-foreground leading-relaxed whitespace-normal wrap-break-word">
                 {feature.description}
               </p>
-            </motion.div>
+            </div>
           ))}
         </div>
 
@@ -757,13 +814,8 @@ export default function Home() {
 
       {/* ═══════════════ SUCCESS STORIES (TESTIMONIALS) ═══════════════ */}
       <section className="container py-24 overflow-hidden border-t border-white/5">
-        <motion.div
+        <div data-reveal
           className="text-center mb-16 px-4"
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: "-100px" }}
-          variants={fadeIn}
-          transition={{ duration: 0.5 }}
         >
           <span className="text-primary text-sm font-semibold uppercase tracking-wider">Testimonials</span>
           <h2 className="text-3xl md:text-5xl font-extrabold text-foreground mt-2 tracking-tight">
@@ -772,18 +824,13 @@ export default function Home() {
           <p className="mt-4 text-lg text-muted-foreground">
             Results that speak louder than promises.
           </p>
-        </motion.div>
+        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 px-4">
           {testimonials.map((testimonial, i) => (
-            <motion.div
+            <div data-reveal
               key={i}
               className="glass-card p-10 relative border border-white/5 hover:border-primary/20 transition-all group flex flex-col justify-between"
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true, margin: "-50px" }}
-              variants={fadeIn}
-              transition={{ duration: 0.4, delay: i * 0.1 }}
             >
               <div className="absolute top-6 right-6 text-primary/20 group-hover:text-primary/40 transition-colors">
                 <Quote size={40} />
@@ -799,90 +846,20 @@ export default function Home() {
                   {testimonial.author}
                 </div>
               </div>
-            </motion.div>
+            </div>
           ))}
         </div>
       </section>
 
-      {/* ═══════════════ COURSES SECTION ═══════════════ */}
-      <section className="container py-24 border-t border-white/5">
-        <div className="max-w-5xl mx-auto space-y-12">
-          <div className="text-center space-y-4">
-            <h2 className="text-3xl md:text-5xl font-black text-white tracking-widest uppercase italic">
-              COURSES
-            </h2>
-            <div className="w-24 h-1 bg-primary mx-auto" />
-          </div>
+      {/* ═══════════════ TESTIMONIAL REELS ═══════════════ */}
+      <ReelsSection />
 
-          <div className="space-y-4">
-            {courseData.map((course, i) => (
-              <motion.div
-                key={i}
-                initial="hidden"
-                whileInView="visible"
-                viewport={{ once: true }}
-                variants={fadeIn}
-                transition={{ duration: 0.5, delay: i * 0.1 }}
-                className={`relative overflow-hidden glass-card h-20 md:h-24 flex items-center px-6 md:px-12 border-white/10 ${
-                  course.isFeatured ? 'bg-white/5 ring-1 ring-primary/20' : 'bg-[#0a0a0f]'
-                }`}
-              >
-                <div className="flex-1 flex items-center justify-between gap-4">
-                  <h3 className="text-sm md:text-xl font-black text-white tracking-widest uppercase truncate">
-                    {course.title}
-                  </h3>
-                  <div className="flex items-center gap-4 md:gap-12 shrink-0">
-                    <span className={`text-[10px] md:text-sm font-bold tracking-widest uppercase ${
-                      course.isFeatured ? 'text-[#FBBF24]' : 'text-white/60'
-                    }`}>
-                      {course.lectures}
-                    </span>
-                    <span className="text-[10px] md:text-sm font-bold text-white/40 tracking-widest uppercase whitespace-nowrap">
-                      {course.duration}
-                    </span>
-                  </div>
-                </div>
-                
-                {course.isFeatured && (
-                  <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[98%] h-1 bg-primary shadow-[0_0_15px_rgba(139,92,246,0.5)]" />
-                )}
-              </motion.div>
-            ))}
-          </div>
-
-          {/* Action Buttons */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-6 pt-12">
-            <Link to="/apply" className="w-full sm:w-auto">
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="w-full px-10 py-5 rounded-2xl bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-600 text-white font-black uppercase tracking-widest shadow-[0_0_40px_-10px_rgba(139,92,246,0.5)] hover:shadow-[0_0_50px_-5px_rgba(139,92,246,0.7)] transition-all flex items-center justify-center gap-3 border-none"
-              >
-                Apply Now
-              </motion.button>
-            </Link>
-            <Link to="/coaching" className="w-full sm:w-auto">
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="w-full px-10 py-5 rounded-2xl bg-transparent border-2 border-purple-500/30 hover:border-purple-500 text-white font-black uppercase tracking-widest transition-all flex items-center justify-center gap-3"
-              >
-                Schedule 1:1 Call
-              </motion.button>
-            </Link>
-          </div>
-        </div>
-      </section>
 
       {/* ═══════════════ MOCK INTERVIEWS SECTION ═══════════════ */}
       <section className="bg-black py-24 px-4 overflow-hidden border-t border-white/10">
         <div className="max-w-7xl mx-auto">
-          <motion.div
+          <div data-reveal
             className="text-center mb-16"
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            variants={fadeIn}
           >
             <h2 className="text-4xl md:text-5xl font-bold text-white mb-6 tracking-tight">
               Mock Interviews
@@ -891,18 +868,13 @@ export default function Home() {
               Personalized sessions designed to help you reframe your answers and product 
               thinking according to your personal domain, background, and experience.
             </p>
-          </motion.div>
+          </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 px-4 mb-20">
             {mockInterviewFeatures.map((item, i) => (
-              <motion.div
+              <div data-reveal
                 key={i}
                 className="bg-white rounded-[2rem] p-10 border border-gray-100 shadow-[0_10px_40px_-15px_rgba(0,0,0,0.05)] flex flex-col items-center text-center transition-all hover:translate-y-[-5px] hover:shadow-[0_20px_50px_-15px_rgba(0,0,0,0.1)]"
-                initial="hidden"
-                whileInView="visible"
-                viewport={{ once: true }}
-                variants={fadeIn}
-                transition={{ delay: i * 0.1 }}
               >
                 <div className="h-16 w-16 rounded-2xl bg-[#7c3aed] flex items-center justify-center mb-8 text-white shadow-lg shadow-purple-500/20">
                   <item.icon size={32} strokeWidth={2.5} />
@@ -913,22 +885,50 @@ export default function Home() {
                 <p className="text-gray-500 text-sm leading-relaxed px-2">
                   {item.description}
                 </p>
-              </motion.div>
+              </div>
             ))}
           </div>
 
           <div className="flex flex-col items-center">
-            <Link to="/contact">
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className="inline-flex items-center gap-4 px-12 py-6 bg-[#7c3aed] text-white rounded-[2.5rem] text-xl font-bold shadow-2xl shadow-purple-500/30 hover:bg-[#6d28d9] transition-all"
+            <div data-reveal
+              className="text-center max-w-3xl"
+            >
+              <p className="text-white/50 text-sm font-semibold tracking-wide">Results so far</p>
+              <h3 className="text-3xl md:text-4xl font-bold text-white mt-3 tracking-tight">
+                <CountUp end={120} start={0} suffix="+" /> Dreams Achieved
+              </h3>
+              <p className="text-base text-gray-300 leading-relaxed mt-5 font-medium">
+                Join a community of students and professionals who have successfully navigated
+                elite recruitment loops. We use data from every past session to give you the most
+                relevant, up-to-date practice.
+              </p>
+            </div>
+
+            <div className="flex flex-col-reverse items-stretch gap-5 mt-12 mx-auto max-w-md sm:flex-row sm:items-center sm:justify-center sm:max-w-none">
+              <a
+                href={WHATSAPP_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center gap-3 px-9 py-5 rounded-[2rem] border-2 border-white/20 text-white text-lg font-bold whitespace-nowrap hover:border-[#7c3aed] hover:bg-[#7c3aed]/10 transition-all"
               >
-                <MessageSquare size={24} />
-                Raise a Query / Book a Mock Interview
-              </motion.button>
-            </Link>
-            
+                <MessageSquare size={22} />
+                Raise a Query
+              </a>
+
+              <a
+                href={CALENDLY_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="relative inline-flex items-center justify-center gap-3 px-9 py-5 rounded-[2rem] border-2 border-transparent bg-[#7c3aed] text-white text-lg font-bold whitespace-nowrap shadow-2xl shadow-purple-500/30 hover:bg-[#6d28d9] transition-all"
+              >
+                <span className="absolute -top-3 right-5 rounded-full bg-[#FBBF24] px-3 py-1 text-[11px] font-black uppercase tracking-widest text-[#0a0a0f] shadow-lg">
+                  Limited slots
+                </span>
+                <Calendar size={22} />
+                Book a Mock Interview
+              </a>
+            </div>
+
             <p className="text-center text-gray-400 text-[13px] max-w-2xl leading-relaxed mt-10 font-medium">
               Mock interviews are guidance-focused and tailored to individual backgrounds.<br />
               They are designed to improve confidence and clarity, not to guarantee job outcomes.
@@ -937,257 +937,271 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ═══════════════ ELITE 1:1 MENTORSHIP SECTION ═══════════════ */}
-      <section className="bg-black py-24 px-4 overflow-hidden border-t border-white/10">
-        <div className="max-w-5xl mx-auto rounded-[2.5rem] bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-600 p-10 md:p-16">
-          <motion.div
-            className="text-center"
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            variants={fadeIn}
-          >
-            <h2 className="text-4xl md:text-5xl font-bold text-white mb-6 tracking-tight">
-              Elite 1:1 Mentorship with{' '}
-              <span className="text-white/90">Khushbu Sharma</span>
-            </h2>
-
-            <p className="text-base md:text-lg text-white/85 max-w-3xl mx-auto leading-relaxed font-medium">
-              Skip the generic advice. Get customised, personalized coaching to solve your
-              specific career bottlenecks.
-            </p>
-
-            <p className="mt-10 text-white font-semibold text-lg md:text-xl">
-              ₹1,300/hour or ₹15,000 for 7 days (2 hours/day)
-            </p>
-
-            <div className="mt-12 flex justify-center">
-              <Link to="/coaching">
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  className="inline-flex items-center gap-4 px-14 py-6 bg-white text-[#0a0a0f] rounded-[2.75rem] text-xl font-bold shadow-2xl shadow-black/20 hover:bg-white/90 transition-all"
-                >
-                  Explore 1:1 Coaching
-                  <ArrowRight size={24} />
-                </motion.button>
-              </Link>
-            </div>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* ═══════════════ VIDEO PREVIEW ═══════════════ */}
-      <VideoPreviewSection />
-
-      {/* ═══════════════ COURSES ═══════════════ */}
-      <section className="container py-24">
-        <motion.div
+      {/* ═══════════════ PROGRAMS + 1:1 MENTORSHIP ═══════════════ */}
+      <section className="container py-24 border-t border-white/5">
+        <div data-reveal
           className="text-center mb-16"
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: "-100px" }}
-          variants={fadeIn}
-          transition={{ duration: 0.5 }}
         >
-          <span className="text-primary text-sm font-semibold uppercase tracking-wider">Programs</span>
-          <h2 className="text-3xl md:text-4xl font-bold text-foreground mt-2">
+          <h2 className="text-3xl md:text-5xl font-bold text-foreground tracking-tight">
             Master PM Skills
           </h2>
-        </motion.div>
+          <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto">
+            Start with a recorded program at your own pace, or work directly with Khushbu one-to-one.
+          </p>
+        </div>
 
+        {/* ─────── Path one: recorded programs ─────── */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-4xl mx-auto">
           {courses.map((course, i) => (
-            <motion.div
+            <div data-reveal
               key={i}
-              className="glass-card p-8"
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true, margin: "-50px" }}
-              variants={fadeIn}
-              transition={{ duration: 0.4, delay: i * 0.15 }}
+              className={`glass-card relative overflow-hidden p-8 ${
+                course.isFeatured ? 'ring-1 ring-primary/25' : ''
+              }`}
             >
               <span className="text-xs bg-primary/10 text-primary px-3 py-1 rounded-full font-semibold">
                 {course.badge}
               </span>
               <h3 className="text-2xl font-bold text-foreground mt-4 mb-2">{course.title}</h3>
               <p className="text-muted-foreground mb-6">{course.description}</p>
-              <div className="flex items-center gap-2 text-sm text-muted-foreground mb-6">
-                <Clock size={16} />
-                <span>{course.lectures} Lectures</span>
+              <div className="flex items-center gap-5 text-sm text-muted-foreground mb-6">
+                <span className="flex items-center gap-2">
+                  <Clock size={16} />
+                  {course.lectures} Lectures
+                </span>
+                <span className="text-white/40">{course.hours} hours total</span>
               </div>
               <Link to="/courses" className="btn-primary w-full text-center">
                 Explore Course
               </Link>
-            </motion.div>
+
+              {course.isFeatured && (
+                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[94%] h-1 bg-primary shadow-[0_0_15px_rgba(139,92,246,0.5)]" />
+              )}
+            </div>
           ))}
         </div>
 
-        {/* Action Buttons */}
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-16 px-4">
-          <Link to="/apply" className="w-full sm:w-auto">
+        <div className="mt-12 flex justify-center px-4">
+          <Link to="/apply">
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              className="w-full sm:w-auto px-10 py-5 rounded-2xl bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-600 text-white font-black uppercase tracking-widest shadow-[0_0_40px_-10px_rgba(139,92,246,0.5)] hover:shadow-[0_0_50px_-5px_rgba(139,92,246,0.7)] transition-all flex items-center justify-center gap-3 border-none"
+              className="px-12 py-5 rounded-2xl bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-600 text-white font-black uppercase tracking-widest shadow-[0_0_40px_-10px_rgba(139,92,246,0.5)] hover:shadow-[0_0_50px_-5px_rgba(139,92,246,0.7)] transition-all border-none"
             >
               Apply Now
             </motion.button>
           </Link>
-          <Link to="/coaching" className="w-full sm:w-auto">
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className="w-full sm:w-auto px-10 py-5 rounded-2xl bg-transparent border-2 border-purple-500/30 hover:border-purple-500 text-white font-black uppercase tracking-widest transition-all flex items-center justify-center gap-3"
-            >
-              Schedule 1:1 Call
-            </motion.button>
-          </Link>
+        </div>
+
+        {/* The fork between the two ways of learning, made explicit. */}
+        <div className="mt-16 flex items-center gap-5 max-w-4xl mx-auto px-4">
+          <span className="h-px flex-1 bg-white/10" />
+          <span className="text-xs font-semibold uppercase tracking-[0.2em] text-white/35">or</span>
+          <span className="h-px flex-1 bg-white/10" />
+        </div>
+
+        {/* ─────── Path two: 1:1 with Khushbu ─────── */}
+        <div data-reveal
+          className="mt-16 max-w-4xl mx-auto rounded-[2.5rem] bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-600 p-10 md:p-14 text-center"
+        >
+          <h3 className="text-3xl md:text-4xl font-bold text-white tracking-tight">
+            Elite 1:1 Mentorship with Khushbu Sharma
+          </h3>
+
+          <p className="mt-5 text-base md:text-lg text-white/85 max-w-2xl mx-auto leading-relaxed font-medium">
+            Skip the generic advice. Get customised, personalized coaching to solve your
+            specific career bottlenecks.
+          </p>
+
+          <p className="mt-8 text-white font-semibold text-lg md:text-xl">
+            ₹1,300/hour or ₹15,000 for 7 days (2 hours/day)
+          </p>
+
+          <div className="mt-10 flex justify-center">
+            <Link to="/coaching">
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="inline-flex items-center gap-3 px-8 md:px-12 py-5 md:py-6 bg-white text-[#0a0a0f] rounded-[2.5rem] text-lg md:text-xl font-bold whitespace-nowrap shadow-2xl shadow-black/20 hover:bg-white/90 transition-all"
+              >
+                Schedule 1:1 Call
+                <ArrowRight size={22} />
+              </motion.button>
+            </Link>
+          </div>
         </div>
       </section>
 
-      {/* ═══════════════ ALUMNI ═══════════════ */}
-      <section className="container py-24">
-        <motion.div
+      {/* ═══════════════ PATH COMPARISON ═══════════════ */}
+      <section className="container py-24 border-t border-white/5">
+        <div data-reveal
           className="text-center mb-16"
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: "-100px" }}
-          variants={fadeIn}
-          transition={{ duration: 0.5 }}
         >
-          <span className="text-primary text-sm font-semibold uppercase tracking-wider">Success Stories</span>
-          <h2 className="text-3xl md:text-4xl font-bold text-foreground mt-2">
-            Where Our Alumni Work
+          <h2 className="text-3xl md:text-5xl font-bold text-foreground tracking-tight">
+            Choose the Right Path for Your Growth
           </h2>
-        </motion.div>
-
-        <div className="flex flex-wrap justify-center gap-8">
-          {alumni.map((person, i) => (
-            <motion.div
-              key={i}
-              className="text-center"
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true }}
-              variants={fadeIn}
-              transition={{ duration: 0.4, delay: i * 0.1 }}
-            >
-              <div className="w-16 h-16 rounded-full bg-accent-gradient ring-2 ring-white/20 flex items-center justify-center mb-3 mx-auto">
-                <span className="text-xl font-bold text-white">{person.initial}</span>
-              </div>
-              <h4 className="font-semibold text-foreground text-sm">{person.name}</h4>
-              <p className="text-xs text-muted-foreground">{person.role}</p>
-              <p className="text-xs text-primary">{person.company}</p>
-            </motion.div>
-          ))}
         </div>
-      </section>
 
-      {/* ═══════════════ TESTIMONIALS ═══════════════ */}
-      <section className="container py-24">
-        <motion.div
-          className="text-center mb-16"
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: "-100px" }}
-          variants={fadeIn}
-          transition={{ duration: 0.5 }}
+        <div data-reveal
+          className="max-w-6xl mx-auto overflow-hidden rounded-2xl border border-purple-500/25 bg-black"
         >
-          <span className="text-primary text-sm font-semibold uppercase tracking-wider">Testimonials</span>
-          <h2 className="text-3xl md:text-4xl font-bold text-foreground mt-2">
-            What Our Students Say
-          </h2>
-        </motion.div>
+          {/* Four columns cannot fit a phone, so the table scrolls with its label column pinned. */}
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[46rem] border-collapse text-left">
+              <thead>
+                <tr className="bg-white/[0.03]">
+                  <th
+                    scope="col"
+                    className="sticky left-0 z-10 bg-[#070709] px-6 py-5 text-[11px] font-semibold uppercase tracking-[0.18em] text-white/40"
+                  >
+                    Feature
+                  </th>
+                  {PATH_COLUMNS.map((path) => (
+                    <th
+                      key={path}
+                      scope="col"
+                      className="px-6 py-5 font-['Montserrat'] text-sm font-black uppercase tracking-wide text-white"
+                    >
+                      {path}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
-          {testimonials.map((item, i) => (
-            <motion.div
-              key={i}
-              className="glass-card p-6"
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true }}
-              variants={fadeIn}
-              transition={{ duration: 0.4, delay: i * 0.1 }}
-            >
-              <Quote className="text-primary/30 mb-4" size={24} />
-              <p className="text-foreground mb-4 italic">"{item.quote}"</p>
-              <p className="text-sm text-primary font-medium">— {item.author}</p>
-            </motion.div>
-          ))}
+              <tbody>
+                {PATH_COMPARISON.map((row) => (
+                  <tr key={row.label} className="border-t border-white/5">
+                    <th
+                      scope="row"
+                      className="sticky left-0 z-10 bg-[#070709] px-6 py-5 align-top text-[11px] font-semibold uppercase tracking-[0.18em] text-white/55"
+                    >
+                      {row.label}
+                    </th>
+                    {row.values.map((value, i) => (
+                      <td
+                        key={i}
+                        className="px-6 py-5 align-top text-sm leading-relaxed text-muted-foreground"
+                      >
+                        {value}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
+
+        <p className="mt-5 text-center text-xs text-white/35 sm:hidden">
+          Swipe the table to compare all three →
+        </p>
       </section>
 
       {/* ═══════════════ CERTIFICATE ═══════════════ */}
-      <section className="container py-24">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center max-w-4xl mx-auto">
-          <motion.div
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: "-100px" }}
-            variants={fadeIn}
-            transition={{ duration: 0.5 }}
+      <section ref={certificateSectionRef} className="container py-24 border-t border-white/5">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-14 lg:gap-16 items-center max-w-6xl mx-auto">
+          <div data-reveal
           >
-            <span className="text-primary text-sm font-semibold uppercase">Certificate</span>
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground mt-2 mb-4">
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
               Industry-Aligned Completion Certificate
             </h2>
-            <p className="text-muted-foreground mb-6">
-              Issued after 100% course completion, including all lectures, evaluations, 
+            <p className="text-muted-foreground mb-10">
+              Issued after 100% course completion, including all lectures, evaluations,
               mock interviews, and your final product case study.
             </p>
-            <ul className="space-y-3">
-              {['Complete 50 lectures', 'Pass evaluations', 'Mock interviews', 'Case study'].map((item, i) => (
-                <li key={i} className="flex items-center gap-3 text-foreground">
-                  <CheckCircle className="text-primary shrink-0" size={18} />
-                  <span className="text-sm">{item}</span>
+
+            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/40 mb-5">
+              What unlocks it
+            </p>
+            <ul className="space-y-3.5">
+              {CERTIFICATE_CRITERIA.map((item, i) => (
+                <li key={item} className="flex items-center gap-3">
+                  <span
+                    className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full transition-all duration-300 ${
+                      certificateUnlocked
+                        ? 'bg-primary text-white'
+                        : 'border border-white/20 text-transparent'
+                    }`}
+                    style={{ transitionDelay: certificateUnlocked ? `${i * 90}ms` : '0ms' }}
+                  >
+                    <CheckCircle size={13} strokeWidth={3} />
+                  </span>
+                  <span
+                    className={`text-sm transition-colors duration-300 ${
+                      certificateUnlocked ? 'text-foreground' : 'text-white/45'
+                    }`}
+                    style={{ transitionDelay: certificateUnlocked ? `${i * 90}ms` : '0ms' }}
+                  >
+                    {item}
+                  </span>
                 </li>
               ))}
             </ul>
-          </motion.div>
 
-          <motion.div
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            variants={fadeIn}
-            transition={{ duration: 0.5, delay: 0.2 }}
-          >
-            <div className="certificate-card">
-              <div className="certificate-header">
-                <Award className="text-accent" size={48} />
+            {/* Credential details only exist once the certificate is issued. */}
+            <div
+              className={`mt-10 transition-all duration-500 ${
+                certificateUnlocked
+                  ? 'opacity-100 translate-y-0'
+                  : 'opacity-0 translate-y-2 pointer-events-none'
+              }`}
+              aria-hidden={!certificateUnlocked}
+            >
+              <div className="flex items-baseline gap-3">
+                <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/40">
+                  Certificate ID
+                </span>
+                <span className="font-['Montserrat'] text-sm font-black tracking-wider text-[#FBBF24]">
+                  YPM0000000
+                </span>
               </div>
-              <div className="certificate-body">
-                <p className="text-xs text-muted-foreground uppercase tracking-wider mb-2">This certifies that</p>
-                <p className="text-lg font-semibold text-foreground mb-1">[Your Name]</p>
-                <p className="text-sm text-muted-foreground mb-4">has successfully completed</p>
-                <h3 className="text-xl font-bold text-foreground mb-1">AI Product Management</h3>
-                <p className="text-xs text-primary">Your Product Manager Academy</p>
-              </div>
-              <div className="certificate-footer">
-                <div className="certificate-seal">YPM</div>
+
+              <div className="mt-4 flex flex-wrap items-center gap-3">
+                <Link
+                  to="/verify?id=YPM0000000"
+                  tabIndex={certificateUnlocked ? 0 : -1}
+                  className="inline-flex items-center gap-2 rounded-full border border-primary/40 px-4 py-2 text-sm font-semibold text-foreground transition-colors hover:border-primary hover:bg-primary/10"
+                >
+                  <BadgeCheck size={16} />
+                  Verify this certificate
+                </Link>
+
+                {[
+                  { label: 'Add to LinkedIn', icon: Linkedin },
+                  { label: 'Download PDF', icon: Download },
+                ].map(({ label, icon: Icon }) => (
+                  <button
+                    key={label}
+                    type="button"
+                    disabled
+                    title="Available once your certificate is issued"
+                    className="inline-flex cursor-not-allowed items-center gap-2 rounded-full border border-white/10 px-4 py-2 text-sm font-semibold text-white/35"
+                  >
+                    <Icon size={16} />
+                    {label}
+                  </button>
+                ))}
               </div>
             </div>
-          </motion.div>
+          </div>
+
+          <div data-reveal>
+            <LockedCertificate unlocked={certificateUnlocked} />
+          </div>
         </div>
       </section>
 
       {/* ═══════════════ FAQ ═══════════════ */}
       <section className="container py-24 max-w-3xl mx-auto">
-        <motion.div
+        <div data-reveal
           className="text-center mb-16"
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: "-100px" }}
-          variants={fadeIn}
-          transition={{ duration: 0.5 }}
         >
           <span className="text-primary text-sm font-semibold uppercase tracking-wider">FAQ</span>
           <h2 className="text-3xl md:text-4xl font-bold text-foreground mt-2">
             Frequently Asked Questions
           </h2>
-        </motion.div>
+        </div>
 
         <div className="space-y-4">
           {faqs.map((faq, i) => (
@@ -1198,12 +1212,7 @@ export default function Home() {
 
       {/* ═══════════════ FINAL CTA ═══════════════ */}
       <section className="container py-24 text-center">
-        <motion.div
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: "-100px" }}
-          variants={fadeIn}
-          transition={{ duration: 0.5 }}
+        <div data-reveal
         >
           <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
             Ready to Transform Your Career?
@@ -1219,7 +1228,7 @@ export default function Home() {
               Talk to an Advisor
             </Link>
           </div>
-        </motion.div>
+        </div>
       </section>
     </div>
   )

@@ -1,150 +1,149 @@
 import { motion } from 'framer-motion'
-import { Mail, MessageSquare, User } from 'lucide-react'
+import { ArrowUpRight, Calendar, Mail, MessageCircle, Send } from 'lucide-react'
+import { CALENDLY_URL, SUPPORT_EMAIL, WHATSAPP_URL } from '@/lib/links'
 
-const fadeIn = {
-  hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0 },
-}
+const CHANNELS = [
+  {
+    icon: Calendar,
+    title: 'Schedule a 1:1 Call',
+    body: 'Pick a time that works for you to talk through your goals.',
+    cta: 'Book a slot',
+    href: CALENDLY_URL,
+    featured: true,
+  },
+  {
+    icon: MessageCircle,
+    title: 'WhatsApp',
+    body: 'Quick questions about courses, coaching or mock interviews.',
+    cta: 'Start a chat',
+    href: WHATSAPP_URL,
+    featured: false,
+  },
+  {
+    icon: Mail,
+    title: 'Email',
+    body: `Write to ${SUPPORT_EMAIL}. We respond within 24–48 hours.`,
+    cta: 'Send an email',
+    href: `mailto:${SUPPORT_EMAIL}`,
+    featured: false,
+  },
+]
+
+const TOPICS = ['Courses', '1:1 Coaching', 'Mock Interview', 'Other']
+
+const field =
+  'block w-full rounded-xl border border-white/10 bg-white/5 px-4 text-white placeholder:text-white/35 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30'
+const label = 'mb-2 block text-sm font-semibold text-white/75'
 
 export default function Contact() {
   return (
     <div className="bg-black text-white">
       {/* Hero */}
-      <section className="pt-28 pb-14 px-4 border-b border-white/10">
-        <div className="max-w-6xl mx-auto">
-          <motion.div
-            className="text-center"
-            initial="hidden"
-            animate="visible"
-            variants={fadeIn}
-            transition={{ duration: 0.5 }}
-          >
-            <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-white/70 text-sm font-semibold">
-              <MessageSquare size={16} className="text-primary" />
-              Contact Us
-            </span>
+      <section className="relative overflow-hidden px-4 pt-32 pb-14">
+        <div className="pointer-events-none absolute left-1/2 top-10 h-[26rem] w-[26rem] -translate-x-1/2 rounded-full bg-primary/15 blur-3xl" />
+        <motion.div
+          className="relative mx-auto max-w-3xl text-center"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          <span className="text-primary text-sm font-semibold uppercase tracking-wider">Contact</span>
+          <h1 className="mt-4 font-['Montserrat'] text-4xl md:text-6xl font-black uppercase tracking-tight">
+            Let’s talk about your <span className="text-[#FBBF24]">PM journey</span>
+          </h1>
+          <p className="mx-auto mt-5 max-w-2xl text-lg text-white/65">
+            Share your goals or questions. We’ll reply with the clearest next step — courses, mentorship, or
+            mock interviews.
+          </p>
+        </motion.div>
+      </section>
 
-            <h1 className="mt-6 text-4xl md:text-6xl font-black tracking-tight">
-              Let’s talk about your
-              <span className="bg-clip-text text-transparent bg-linear-to-r from-purple-400 via-indigo-400 to-purple-400">
-                {' '}PM journey
+      {/* Channels */}
+      <section className="px-4 pb-16">
+        <div className="mx-auto grid max-w-6xl md:grid-cols-3 gap-x-5 gap-y-5">
+          {CHANNELS.map(({ icon: Icon, title, body, cta, href, featured }) => (
+            <a
+              data-reveal
+              key={title}
+              href={href}
+              target={href.startsWith('mailto:') ? undefined : '_blank'}
+              rel="noreferrer"
+              className={`group flex flex-col rounded-3xl border p-7 transition-colors ${
+                featured
+                  ? 'border-purple-400/50 bg-linear-to-br from-[#7e22ce]/50 to-[#07070c] hover:border-purple-300'
+                  : 'border-white/10 bg-[#07070c] hover:border-purple-500/40'
+              }`}
+            >
+              <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-linear-to-br from-[#a855f7] to-[#7e22ce]">
+                <Icon size={22} className="text-white" />
               </span>
-            </h1>
-
-            <p className="mt-4 text-white/70 text-base md:text-lg max-w-3xl mx-auto">
-              Share your goals or questions. We’ll reply with the clearest next step — courses, mentorship, or mock interviews.
-            </p>
-          </motion.div>
+              <h2 className="mt-6 text-xl font-bold">{title}</h2>
+              <p className="mt-2 flex-1 text-sm leading-relaxed text-white/60">{body}</p>
+              <span className="mt-6 inline-flex items-center gap-x-1.5 text-sm font-semibold text-[#FBBF24]">
+                {cta}
+                <ArrowUpRight size={16} className="transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+              </span>
+            </a>
+          ))}
         </div>
       </section>
 
-      {/* Content */}
-      <section className="py-16 px-4">
-        <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
-          {/* Left: Info */}
-          <motion.div
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: '-100px' }}
-            variants={fadeIn}
-            transition={{ duration: 0.5 }}
-            className="rounded-3xl bg-[#07070c] border border-purple-500/30 shadow-[0_16px_35px_-20px_rgba(124,58,237,0.45)] p-8 md:p-10"
-          >
-            <h2 className="text-2xl md:text-3xl font-black">What should you send?</h2>
-            <p className="mt-3 text-white/70 leading-relaxed">
-              A short note is enough. Include your current role, target role, and what you want help with.
+      {/* Form */}
+      <section className="px-4 pb-24">
+        <div data-reveal className="mx-auto max-w-3xl rounded-3xl bg-linear-to-br from-purple-500/60 via-purple-500/10 to-purple-500/40 p-px">
+          <div className="rounded-3xl bg-[#07070c] p-7 md:p-10">
+            <h2 className="text-2xl md:text-3xl font-bold">Send a message</h2>
+            <p className="mt-2 text-white/60">
+              Include your current role, target role, and what you want help with. This opens your email app
+              with the message ready to send.
             </p>
 
-            <div className="mt-10 space-y-4">
-              <div className="flex items-start gap-4">
-                <div className="w-11 h-11 rounded-2xl bg-primary/20 flex items-center justify-center border border-purple-500/30 shrink-0">
-                  <Mail size={18} className="text-primary" />
-                </div>
-                <div>
-                  <div className="font-bold">Email</div>
-                  <div className="text-white/70 text-sm">We respond within 24–48 hours.</div>
-                </div>
+            <form
+              className="mt-8 grid sm:grid-cols-2 gap-x-4 gap-y-5"
+              onSubmit={(e) => {
+                e.preventDefault()
+                const f = new FormData(e.currentTarget)
+                const subject = `[${f.get('topic')}] Enquiry from ${f.get('name')}`
+                const body = `${f.get('message')}\n\n— ${f.get('name')} (${f.get('email')})`
+                window.location.href = `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
+              }}
+            >
+              <div>
+                <label htmlFor="c-name" className={label}>Name</label>
+                <input id="c-name" name="name" className={`${field} h-12`} placeholder="Your name" autoComplete="name" required />
               </div>
-
-              <div className="flex items-start gap-4">
-                <div className="w-11 h-11 rounded-2xl bg-primary/20 flex items-center justify-center border border-purple-500/30 shrink-0">
-                  <User size={18} className="text-primary" />
-                </div>
-                <div>
-                  <div className="font-bold">Best for</div>
-                  <div className="text-white/70 text-sm">Course guidance, mentorship fit, and mock interview scheduling.</div>
-                </div>
+              <div>
+                <label htmlFor="c-email" className={label}>Email</label>
+                <input id="c-email" name="email" type="email" className={`${field} h-12`} placeholder="you@domain.com" autoComplete="email" required />
               </div>
-            </div>
-
-            <div className="mt-10 rounded-2xl bg-[#050508] border border-purple-500/25 p-5">
-              <div className="text-sm text-white/70 leading-relaxed">
-                Note: Mock interviews are guidance-focused and don’t guarantee outcomes.
+              <div className="sm:col-span-2">
+                <label htmlFor="c-topic" className={label}>Topic</label>
+                <select id="c-topic" name="topic" className={`${field} h-12 [&>option]:bg-[#07070c]`} defaultValue={TOPICS[0]}>
+                  {TOPICS.map((t) => (
+                    <option key={t}>{t}</option>
+                  ))}
+                </select>
               </div>
-            </div>
-          </motion.div>
-
-          {/* Right: Form */}
-          <motion.div
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: '-100px' }}
-            variants={fadeIn}
-            transition={{ duration: 0.5, delay: 0.1 }}
-            className="rounded-3xl bg-linear-to-r from-purple-600 via-indigo-600 to-purple-600 p-px"
-          >
-            <div className="rounded-3xl bg-[#050508] p-8 md:p-10 border border-purple-500/30">
-              <h2 className="text-2xl md:text-3xl font-black">Send a message</h2>
-              <p className="mt-3 text-white/70">
-                Fill this out and we’ll get back to you.
-              </p>
-
-              <form
-                className="mt-8 space-y-4"
-                onSubmit={(e) => {
-                  e.preventDefault()
-                }}
-              >
-                <div>
-                  <label className="block text-sm font-semibold text-white/80 mb-2">Name</label>
-                  <input
-                    type="text"
-                    className="w-full h-12 px-4 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-primary/40"
-                    placeholder="Your name"
-                    autoComplete="name"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-white/80 mb-2">Email</label>
-                  <input
-                    type="email"
-                    className="w-full h-12 px-4 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-primary/40"
-                    placeholder="you@domain.com"
-                    autoComplete="email"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-white/80 mb-2">Message</label>
-                  <textarea
-                    className="w-full min-h-32 p-4 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-primary/40"
-                    placeholder="Tell us what you’re aiming for and what you need help with."
-                    required
-                  />
-                </div>
-
-                <button
-                  type="submit"
-                  className="w-full h-12 rounded-xl bg-white text-[#0a0a0f] font-black hover:bg-white/90 transition-colors"
-                >
-                  Send Message
+              <div className="sm:col-span-2">
+                <label htmlFor="c-message" className={label}>Message</label>
+                <textarea
+                  id="c-message"
+                  name="message"
+                  className={`${field} min-h-36 py-3`}
+                  placeholder="Tell us what you’re aiming for and what you need help with."
+                  required
+                />
+              </div>
+              <div className="sm:col-span-2">
+                <button type="submit" className="btn-primary h-12 justify-center px-8">
+                  <Send size={17} /> Send Message
                 </button>
-              </form>
-            </div>
-          </motion.div>
+                <p className="mt-4 text-xs text-white/40">
+                  Mock interviews are guidance-focused and don’t guarantee outcomes.
+                </p>
+              </div>
+            </form>
+          </div>
         </div>
       </section>
     </div>

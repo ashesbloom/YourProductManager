@@ -31,9 +31,9 @@ const COURSES: Record<string, CourseContentData> = {
   'ai-product': {
     id: 'ai-product',
     title: 'AI Product Management',
-    oldPrice: '₹35,000',
-    price: '₹7,999/-',
-    priceMeta: '(incl. GST) • Founding Price',
+    oldPrice: '₹29,999',
+    price: '₹11,999',
+    priceMeta: '(incl. GST) • Launch Price',
     enrollNote: 'Founding price available for early learners only',
     freeNotice:
       'Free lectures are provided to help you understand the fundamentals and teaching\napproach before enrolling.',
@@ -66,9 +66,9 @@ const COURSES: Record<string, CourseContentData> = {
   foundations: {
     id: 'foundations',
     title: 'Product Management (Foundations)',
-    oldPrice: '₹9,000',
-    price: '₹2,300/-',
-    priceMeta: '(incl. GST) • Founding Price',
+    oldPrice: '₹6,999',
+    price: '₹2,999',
+    priceMeta: '(incl. GST) • Introductory Price',
     enrollNote: 'Founding price available for early learners only',
     freeNotice:
       'Free lectures are provided to help you understand the fundamentals and teaching\napproach before enrolling.',
