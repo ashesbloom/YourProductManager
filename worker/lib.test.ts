@@ -291,3 +291,43 @@ test('pay: admin grants survive refunds; buying again after a refund restores ac
   await fulfill(db, 'order_C', 'pay_C', 3)
   assert.deepEqual(await active(db), ['ai-product', 'foundations'])
 })
+import { hasAccess, parseProgress, recordProgress } from './media.ts'
+test('media: access needs a live session and an unrevoked enrollment in that course', async () => {
+  const db = testDb()
+  const uid = await upsertUser(db, { email: 'a@b.co' }, 0)
+  const sid = await sha256Hex(await createSession(db, uid, 0))
+  assert.equal(await hasAccess(db, sid, 'foundations', 1), false) // not enrolled
+  await db.prepare(`INSERT INTO enrollments(user_id, course_id, source, granted_at) VALUES(?, 'foundations', 'admin', 0)`).bind(uid).run()
+  assert.equal(await hasAccess(db, sid, 'foundations', 1), true)
+  assert.equal(await hasAccess(db, sid, 'ai-product', 1), false) // a different course
+  assert.equal(await hasAccess(db, sid, 'foundations', SESSION_IDLE_MS + 1), false) // session expired mid-video
+  await db.prepare(`UPDATE enrollments SET revoked_at = 5`).run()
+  assert.equal(await hasAccess(db, sid, 'foundations', 6), false) // refunded / revoked mid-video
+})
+
+test('progress: rejects lectures without video and malformed bitmaps; clamps position', () => {
+  const lectures = {
+    live: { id: 'live', title: 'L', free: false, durationS: 100, courseId: 'foundations' },
+    soon: { id: 'soon', title: 'S', free: false, durationS: 0, courseId: 'foundations' },
+  }
+  assert.throws(() => parseProgress({ lectureId: 'soon', watched: '' }, lectures), { status: 404 })
+  assert.throws(() => parseProgress({ lectureId: '__proto__', watched: '' }, lectures), { status: 404 })
+  assert.throws(() => parseProgress({ lectureId: 'live', watched: 'zz' }, lectures), { status: 400 })
+  assert.throws(() => parseProgress({ lectureId: 'live', watched: 'ff'.repeat(50) }, lectures), { status: 400 })
+  assert.equal(parseProgress({ lectureId: 'live', watched: 'ff03', positionS: 9999 }, lectures).positionS, 100)
+  assert.equal(parseProgress({ lectureId: 'live', watched: 'ff03', positionS: 'x' }, lectures).positionS, 0)
+})
+
+test('progress: completes once at 85% across sessions; seeking adds nothing; resume follows the latest beat', async () => {
+  const db = testDb()
+  const uid = await upsertUser(db, { email: 'a@b.co' }, 0)
+  const lec = { id: 'foundations-01', durationS: 100 }
+  assert.deepEqual(await recordProgress(db, uid, lec, 50, fromRanges([[0, 50]], 100), 1), { pct: 50, completed: false })
+  assert.deepEqual(await recordProgress(db, uid, lec, 95, fromRanges([[0, 5], [95, 100]], 100), 2), { pct: 50, completed: false })
+  assert.deepEqual(await recordProgress(db, uid, lec, 90, fromRanges([[50, 90]], 100), 3), { pct: 90, completed: true })
+  assert.deepEqual(await recordProgress(db, uid, lec, 10, fromRanges([[0, 10]], 100), 4), { pct: 90, completed: true })
+  const { n } = (await db.prepare(`SELECT COUNT(*) AS n FROM events WHERE type = 'lecture_done'`).first()) as { n: number }
+  assert.equal(n, 1)
+  const { position_s } = (await db.prepare(`SELECT position_s FROM progress`).first()) as { position_s: number }
+  assert.equal(position_s, 10)
+})

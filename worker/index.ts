@@ -1,11 +1,16 @@
 import { googleCallback, googleStart, logout, me, sendOtp, verifyOtp } from './auth.ts'
 import { HttpError, json } from './http.ts'
+import { getProgress, media, saveProgress } from './media.ts'
 import { checkout, checkoutVerify, webhook } from './pay.ts'
 
 export default {
   async fetch(req, env, ctx): Promise<Response> {
     const url = new URL(req.url)
     try {
+      if (req.method === 'GET' && url.pathname.startsWith('/media/')) return await media(req, env, url.pathname)
+      if (req.method === 'GET' && url.pathname.startsWith('/api/progress/')) {
+        return await getProgress(req, env, url.pathname.slice('/api/progress/'.length))
+      }
       switch (`${req.method} ${url.pathname}`) {
         case 'GET /api/health':
           return json({ ok: true })
@@ -27,6 +32,8 @@ export default {
           return await checkoutVerify(req, env, ctx)
         case 'POST /api/razorpay/webhook':
           return await webhook(req, env, ctx)
+        case 'POST /api/progress':
+          return await saveProgress(req, env)
       }
       return json({ error: 'Not found' }, 404)
     } catch (err) {
