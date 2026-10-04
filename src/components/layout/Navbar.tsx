@@ -1,5 +1,6 @@
 import { useLocation } from 'react-router-dom'
 import PillNav from '@/components/PillNav'
+import { useMe } from '@/lib/me'
 
 const navLinks = [
   { href: '/', label: 'Home' },
@@ -14,13 +15,16 @@ const navLinks = [
 
 export function Navbar() {
   const location = useLocation()
+  const { data: me } = useMe()
+  // Logged-in visitors get their course dashboard in place of Login.
+  const items = me?.user ? navLinks.map((l) => (l.href === '/login' ? { href: '/dashboard', label: 'My Courses' } : l)) : navLinks
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 transition-none">
       <PillNav
         logo="/vite.svg"
         logoAlt="YPM Logo"
-        items={navLinks}
+        items={items}
         activeHref={location.pathname}
         className="custom-nav"
         ease="power2.easeOut"

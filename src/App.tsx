@@ -14,6 +14,7 @@ const About = lazy(() => import('@/pages/About'))
 const Privacy = lazy(() => import('@/pages/Privacy'))
 const Terms = lazy(() => import('@/pages/Terms'))
 const Verify = lazy(() => import('@/pages/Verify'))
+const Login = lazy(() => import('@/pages/Login'))
 
 /**
  * Sits inside <Suspense> so its effect runs once the lazy page below it has
@@ -54,6 +55,7 @@ function App() {
               <Route path="/privacy" element={<Privacy />} />
               <Route path="/terms" element={<Terms />} />
               <Route path="/verify" element={<Verify />} />
+              <Route path="/login" element={<Login />} />
               <Route path="/blog" element={<Blog />} />
               <Route path="/resources" element={<Resources />} />
             </Routes>
