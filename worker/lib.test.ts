@@ -146,3 +146,60 @@ test('bitmap: validation rejects non-hex, odd-length and oversized input', () =>
 test('bitmap: bits beyond the lecture length are ignored', () => {
   assert.equal(countHex('ffff', 10), 10)
 })
+import { checkOtp, createSession, issueOtp, upsertUser } from './auth.ts'
+import { loadSession, SESSION_IDLE_MS } from './http.ts'
+test('otp: single-use code, 60s cooldown, expiry', async () => {
+  const db = testDb()
+  const t0 = 1_000_000
+  const first = (await issueOtp(db, 'a@b.co', t0)) as { code: string }
+  assert.match(first.code, /^\d{6}$/)
+  assert.equal(await issueOtp(db, 'a@b.co', t0 + 30_000), 'cooldown')
+  assert.equal(await checkOtp(db, 'a@b.co', first.code === '000000' ? '111111' : '000000', t0 + 1), false)
+  assert.equal(await checkOtp(db, 'a@b.co', first.code, t0 + 2), true)
+  assert.equal(await checkOtp(db, 'a@b.co', first.code, t0 + 3), false) // already used
+  const second = (await issueOtp(db, 'a@b.co', t0 + 61_000)) as { code: string }
+  assert.equal(await checkOtp(db, 'a@b.co', second.code, t0 + 61_000 + 10 * 60_000 + 1), false) // expired
+})
+
+test('otp: locks after 5 wrong attempts', async () => {
+  const db = testDb()
+  const { code } = (await issueOtp(db, 'a@b.co', 0)) as { code: string }
+  const wrong = code === '000000' ? '111111' : '000000'
+  for (let i = 0; i < 5; i++) assert.equal(await checkOtp(db, 'a@b.co', wrong, 1), false)
+  assert.equal(await checkOtp(db, 'a@b.co', code, 2), false)
+})
+
+test('otp: at most 10 codes per email per 24h', async () => {
+  const db = testDb()
+  for (let i = 0; i < 10; i++) assert.equal(typeof (await issueOtp(db, 'a@b.co', i * 61_000)), 'object')
+  assert.equal(await issueOtp(db, 'a@b.co', 10 * 61_000), 'limit')
+  assert.equal(typeof (await issueOtp(db, 'a@b.co', DAY + 1)), 'object')
+})
+
+test('users: first-touch utm kept; Google sub links to the same account', async () => {
+  const db = testDb()
+  const id = await upsertUser(db, { email: 'a@b.co', utm: '{"utm_source":"meta"}' }, 1)
+  assert.equal(await upsertUser(db, { email: 'a@b.co', utm: '{"utm_source":"organic"}' }, 2), id)
+  assert.equal(await upsertUser(db, { email: 'a@b.co', googleSub: 'g-1', name: 'A' }, 3), id)
+  assert.equal(await upsertUser(db, { email: 'renamed@b.co', googleSub: 'g-1' }, 4), id) // Google email changed
+  const row = (await db.prepare(`SELECT utm, name, google_sub FROM users WHERE id = ?`).bind(id).first()) as Record<string, unknown>
+  assert.equal(row.utm, '{"utm_source":"meta"}')
+  assert.equal(row.name, 'A')
+  assert.equal(row.google_sub, 'g-1')
+})
+
+test('session: lookup, idle expiry, sliding refresh, max 3 per user', async () => {
+  const db = testDb()
+  const uid = await upsertUser(db, { email: 'a@b.co' }, 0)
+  const t1 = await createSession(db, uid, 0)
+  assert.equal((await loadSession(db, t1, 1))?.userId, uid)
+  assert.equal(await loadSession(db, t1, SESSION_IDLE_MS + 1), null) // idle too long
+  assert.equal(await loadSession(db, 'not-a-token', 1), null)
+  const t2 = await createSession(db, uid, 0)
+  await loadSession(db, t2, 2 * DAY) // activity on day 2 slides the expiry
+  assert.ok(await loadSession(db, t2, SESSION_IDLE_MS + DAY))
+  await createSession(db, uid, 10)
+  const t4 = await createSession(db, uid, 20) // 4th session evicts the oldest (t1)
+  assert.equal(await loadSession(db, t1, 30), null)
+  assert.ok(await loadSession(db, t4, 30))
+})
