@@ -38,7 +38,7 @@ const PAGES: Record<string, CoursePage> = {
   },
 }
 
-function LectureRow({ lecture }: { lecture: Lecture }) {
+function LectureRow({ courseId, lecture }: { courseId: string; lecture: Lecture }) {
   const isFree = lecture.free
 
   return (
@@ -68,9 +68,12 @@ function LectureRow({ lecture }: { lecture: Lecture }) {
       </div>
 
       {isFree ? (
-        <button className="btn-purple-animated shrink-0 inline-flex items-center justify-center px-5 h-10 rounded-full text-primary-foreground font-bold">
+        <Link
+          to={`/learn/${courseId}/${lecture.id}`}
+          className="btn-purple-animated shrink-0 inline-flex items-center justify-center px-5 h-10 rounded-full text-primary-foreground font-bold"
+        >
           Watch Free
-        </button>
+        </Link>
       ) : (
         <div className="shrink-0 inline-flex items-center gap-2 px-4 h-9 rounded-full bg-white border border-gray-200 text-gray-500 text-xs font-semibold">
           Locked
@@ -105,7 +108,7 @@ export default function CourseContent() {
 
               <div className="mt-8 space-y-4">
                 {lectures.map((lecture) => (
-                  <LectureRow key={lecture.id} lecture={lecture} />
+                  <LectureRow key={lecture.id} courseId={course.id} lecture={lecture} />
                 ))}
                 {lockedCount > 0 ? (
                   <p className="pt-2 text-center text-sm text-gray-400">Enroll to unlock all {lectures.length} lectures</p>
