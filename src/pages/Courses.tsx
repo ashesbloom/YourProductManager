@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { ArrowRight, BookOpen, Sparkles } from 'lucide-react'
+import { courseLectures, formatINR, PRODUCTS } from '@/data/catalog'
 
 type CourseCard = {
   id: string
@@ -8,12 +9,6 @@ type CourseCard = {
   theme: 'light' | 'dark'
   badge: string
   title: string
-  metaLeft: string
-  metaRight: string
-  oldPrice?: string
-  price: string
-  priceLabel: string
-  priceSuffix?: string
   note?: string
 }
 
@@ -25,12 +20,6 @@ const courses: CourseCard[] = [
     theme: 'light',
     badge: 'FOUNDING PRICE',
     title: 'PRODUCT MANAGEMENT\n(FOUNDATIONS)',
-    metaLeft: '16 Lectures',
-    metaRight: '1 Free Lecture',
-    oldPrice: '₹6,999',
-    price: '₹2,999',
-    priceLabel: 'Introductory price',
-    priceSuffix: '(incl. GST)',
     note: 'Recorded lectures only, self-paced format',
   },
   {
@@ -40,12 +29,6 @@ const courses: CourseCard[] = [
     theme: 'dark',
     badge: 'FOUNDING PRICE',
     title: 'AI PRODUCT MANAGEMENT',
-    metaLeft: '50 Lectures',
-    metaRight: '3 Free Lectures',
-    oldPrice: '₹29,999',
-    price: '₹11,999',
-    priceLabel: 'Launch price',
-    priceSuffix: '(incl. GST)',
     note: 'No live mentoring, no 1:1 support, no placement guarantees',
   },
 ]
@@ -57,6 +40,9 @@ function LeftIcon({ type, className }: { type: CourseCard['leftIcon']; className
 
 function CourseCardRow({ course }: { course: CourseCard }) {
   const isDark = course.theme === 'dark'
+  const product = PRODUCTS[course.id]
+  const lectures = courseLectures(course.id)
+  const freeCount = lectures.filter((l) => l.free).length
 
   return (
     <div data-reveal
@@ -121,31 +107,28 @@ function CourseCardRow({ course }: { course: CourseCard }) {
           <div className={isDark ? 'mt-6 flex items-center gap-8 text-white/70' : 'mt-6 flex items-center gap-8 text-gray-500'}>
             <div className="flex items-center gap-2">
               <BookOpen size={18} className={isDark ? 'text-white/60' : 'text-gray-500'} />
-              <span>{course.metaLeft}</span>
+              <span>{lectures.length} Lectures</span>
             </div>
             <div className={isDark ? 'text-green-400 font-semibold' : 'text-green-600 font-semibold'}>
-              {course.metaRight}
+              {freeCount} Free {freeCount === 1 ? 'Lecture' : 'Lectures'}
             </div>
           </div>
 
           <div className={isDark ? 'mt-8 text-xs font-semibold uppercase tracking-[0.18em] text-[#FBBF24]/70' : 'mt-8 text-xs font-semibold uppercase tracking-[0.18em] text-[#7c3aed]'}>
-            {course.priceLabel}
+            {product.priceLabel}
           </div>
           <div className="mt-2 flex items-end gap-4 flex-wrap">
-            {course.oldPrice ? (
-              <span className={isDark ? 'text-white/30 line-through text-xl font-semibold' : 'text-gray-400 line-through text-xl font-semibold'}>
-                {course.oldPrice}
-              </span>
-            ) : null}
-            <span className={isDark ? 'text-[#FBBF24] text-4xl font-black' : 'text-[#0a0a0f] text-4xl font-black'}>
-              {course.price}
+            <span className={isDark ? 'text-white/30 line-through text-xl font-semibold' : 'text-gray-400 line-through text-xl font-semibold'}>
+              {formatINR(product.oldPricePaise)}
             </span>
-            {course.priceSuffix ? (
-              <span className={isDark ? 'text-white/50 text-sm font-semibold' : 'text-gray-400 text-sm font-semibold'}>
-                {course.priceSuffix}
-              </span>
-            ) : null}
+            <span className={isDark ? 'text-[#FBBF24] text-4xl font-black' : 'text-[#0a0a0f] text-4xl font-black'}>
+              {formatINR(product.pricePaise)}
+            </span>
+            <span className={isDark ? 'text-white/50 text-sm font-semibold' : 'text-gray-400 text-sm font-semibold'}>
+              (incl. GST)
+            </span>
           </div>
+
 
           {course.note ? (
             <div className={isDark ? 'mt-3 text-white/45 text-xs' : 'mt-3 text-gray-400 text-xs'}>
