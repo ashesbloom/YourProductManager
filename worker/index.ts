@@ -1,8 +1,9 @@
 import { googleCallback, googleStart, logout, me, sendOtp, verifyOtp } from './auth.ts'
 import { HttpError, json } from './http.ts'
+import { checkout, checkoutVerify, webhook } from './pay.ts'
 
 export default {
-  async fetch(req, env): Promise<Response> {
+  async fetch(req, env, ctx): Promise<Response> {
     const url = new URL(req.url)
     try {
       switch (`${req.method} ${url.pathname}`) {
@@ -20,6 +21,12 @@ export default {
           return await logout(req, env)
         case 'GET /api/me':
           return await me(req, env)
+        case 'POST /api/checkout':
+          return await checkout(req, env)
+        case 'POST /api/checkout/verify':
+          return await checkoutVerify(req, env, ctx)
+        case 'POST /api/razorpay/webhook':
+          return await webhook(req, env, ctx)
       }
       return json({ error: 'Not found' }, 404)
     } catch (err) {

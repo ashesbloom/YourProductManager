@@ -203,3 +203,91 @@ test('session: lookup, idle expiry, sliding refresh, max 3 per user', async () =
   assert.equal(await loadSession(db, t1, 30), null)
   assert.ok(await loadSession(db, t4, 30))
 })
+import { applyEvent, fulfill, markFailed, ownsAll, refund } from './pay.ts'
+async function seedOrder(db: D1Database, id: string, productId: string, userId = 1) {
+  await db.prepare(`INSERT OR IGNORE INTO users(id, email, created_at, last_seen_at) VALUES(?, ?, 0, 0)`).bind(userId, `u${userId}@b.co`).run()
+  await db
+    .prepare(`INSERT INTO orders(id, user_id, product_id, amount, status, created_at) VALUES(?, ?, ?, 100, 'created', 0)`)
+    .bind(id, userId, productId)
+    .run()
+}
+const active = async (db: D1Database, userId = 1) =>
+  (
+    await db.prepare(`SELECT course_id FROM enrollments WHERE user_id = ? AND revoked_at IS NULL ORDER BY course_id`).bind(userId).all()
+  ).results.map((r) => (r as { course_id: string }).course_id)
+const paidEvent = (orderId: string, paymentId: string) => ({
+  event: 'order.paid',
+  payload: { order: { entity: { id: orderId } }, payment: { entity: { id: paymentId, order_id: orderId } } },
+})
+const refundEvent = (orderId: string, paymentId: string, refund_status: string) => ({
+  event: 'refund.processed',
+  payload: { refund: { entity: { payment_id: paymentId } }, payment: { entity: { id: paymentId, order_id: orderId, refund_status } } },
+})
+
+test('pay: client verify and webhook racing grant access exactly once', async () => {
+  const db = testDb()
+  await seedOrder(db, 'order_A', 'ai-product')
+  assert.ok(await fulfill(db, 'order_A', 'pay_1', 10))
+  assert.equal(await applyEvent(db, paidEvent('order_A', 'pay_1'), 11), null) // webhook arrives second
+  assert.equal(await fulfill(db, 'order_A', 'pay_1', 12), null) // retried delivery
+  assert.deepEqual(await active(db), ['ai-product', 'foundations'])
+  const { n } = (await db.prepare(`SELECT COUNT(*) AS n FROM events WHERE type = 'order_paid'`).first()) as { n: number }
+  assert.equal(n, 1)
+})
+
+test('pay: failed attempt then success on the same order; a late failure never downgrades', async () => {
+  const db = testDb()
+  await seedOrder(db, 'order_A', 'foundations')
+  await markFailed(db, 'order_A', 'pay_1', 1)
+  assert.ok(await fulfill(db, 'order_A', 'pay_2', 2))
+  await markFailed(db, 'order_A', 'pay_3', 3)
+  const { status } = (await db.prepare(`SELECT status FROM orders WHERE id = 'order_A'`).first()) as { status: string }
+  assert.equal(status, 'paid')
+  assert.deepEqual(await active(db), ['foundations'])
+})
+
+test('pay: unknown order is a no-op', async () => {
+  assert.equal(await fulfill(testDb(), 'order_missing', 'pay', 1), null)
+})
+
+test('pay: ownsAll blocks paying twice but allows the AI upgrade', async () => {
+  const db = testDb()
+  await seedOrder(db, 'order_A', 'foundations')
+  await fulfill(db, 'order_A', 'pay_1', 1)
+  assert.equal(await ownsAll(db, 1, ['foundations']), true)
+  assert.equal(await ownsAll(db, 1, ['ai-product', 'foundations']), false)
+})
+
+test('pay: partial refund keeps access; full refund revokes', async () => {
+  const db = testDb()
+  await seedOrder(db, 'order_A', 'foundations')
+  await applyEvent(db, paidEvent('order_A', 'pay_A'), 1)
+  await applyEvent(db, refundEvent('order_A', 'pay_A', 'partial'), 2)
+  assert.deepEqual(await active(db), ['foundations'])
+  await applyEvent(db, refundEvent('order_A', 'pay_A', 'full'), 3)
+  assert.deepEqual(await active(db), [])
+})
+
+test('pay: full refund revokes only what that order granted', async () => {
+  const db = testDb()
+  await seedOrder(db, 'order_A', 'foundations')
+  await fulfill(db, 'order_A', 'pay_A', 1)
+  await seedOrder(db, 'order_B', 'ai-product')
+  await fulfill(db, 'order_B', 'pay_B', 2)
+  await refund(db, 'pay_A', 3)
+  assert.deepEqual(await active(db), ['ai-product', 'foundations']) // order B still grants Foundations
+  await refund(db, 'pay_B', 4)
+  assert.deepEqual(await active(db), [])
+})
+
+test('pay: admin grants survive refunds; buying again after a refund restores access', async () => {
+  const db = testDb()
+  await seedOrder(db, 'order_A', 'ai-product')
+  await fulfill(db, 'order_A', 'pay_A', 1)
+  await db.prepare(`UPDATE enrollments SET source = 'admin' WHERE course_id = 'foundations'`).run()
+  await refund(db, 'pay_A', 2)
+  assert.deepEqual(await active(db), ['foundations'])
+  await seedOrder(db, 'order_C', 'ai-product')
+  await fulfill(db, 'order_C', 'pay_C', 3)
+  assert.deepEqual(await active(db), ['ai-product', 'foundations'])
+})
