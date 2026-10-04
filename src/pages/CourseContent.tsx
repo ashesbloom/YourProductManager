@@ -1,7 +1,11 @@
-import { Link, Navigate, useParams } from 'react-router-dom'
+import { useState } from 'react'
+import { Link, Navigate, useNavigate, useParams } from 'react-router-dom'
+import { useQueryClient } from '@tanstack/react-query'
 import { motion } from 'framer-motion'
 import { CheckCircle2, CirclePlay, Lock, Star } from 'lucide-react'
 import { COURSES, PRODUCTS, courseLectures, formatINR, lookup, type Lecture } from '@/data/catalog'
+import { api, ApiError, loadScript } from '@/lib/api'
+import { useMe } from '@/lib/me'
 
 const fadeIn = {
   hidden: { opacity: 0, y: 18 },
@@ -83,6 +87,90 @@ function LectureRow({ courseId, lecture }: { courseId: string; lecture: Lecture 
   )
 }
 
+type CheckoutOrder = { orderId: string; amount: number; keyId: string; name: string; prefill: { email: string; name: string } }
+type RazorpayResult = { razorpay_order_id: string; razorpay_payment_id: string; razorpay_signature: string }
+type RazorpayCheckout = { open: () => void; on: (event: 'payment.failed', cb: () => void) => void }
+declare global {
+  interface Window {
+    Razorpay?: new (options: Record<string, unknown>) => RazorpayCheckout
+  }
+}
+
+const ENROLL_CLASS =
+  'btn-purple-animated mt-6 inline-flex w-full h-12 items-center justify-center rounded-xl text-primary-foreground font-bold hover:opacity-90 transition-opacity disabled:opacity-60'
+
+function EnrollButton({ courseId }: { courseId: string }) {
+  const { data: me, isPending } = useMe()
+  const navigate = useNavigate()
+  const queryClient = useQueryClient()
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState('')
+
+  if (me?.enrollments.includes(courseId)) {
+    return (
+      <Link to={`/learn/${courseId}`} className={ENROLL_CLASS}>
+        Go to course
+      </Link>
+    )
+  }
+
+  async function enroll() {
+    if (!me?.user) {
+      navigate(`/login?next=${encodeURIComponent(`/courses/${courseId}`)}`)
+      return
+    }
+    setBusy(true)
+    setError('')
+    try {
+      const [order] = await Promise.all([
+        api<CheckoutOrder>('/api/checkout', { productId: courseId }),
+        loadScript('https://checkout.razorpay.com/v1/checkout.js'),
+      ])
+      if (!window.Razorpay) throw new Error('Checkout unavailable')
+      const checkout = new window.Razorpay({
+        key: order.keyId,
+        order_id: order.orderId,
+        amount: order.amount,
+        currency: 'INR',
+        name: 'Your Product Manager',
+        description: order.name,
+        prefill: order.prefill,
+        theme: { color: '#8b5cf6' },
+        handler: async (result: RazorpayResult) => {
+          try {
+            const { status } = await api<{ status: string }>('/api/checkout/verify', result)
+            if (status !== 'paid') throw new Error(status)
+            await queryClient.invalidateQueries({ queryKey: ['me'] })
+            navigate(`/learn/${courseId}`)
+          } catch {
+            setError('Payment received, but access is still being set up. Refresh in a minute; if it persists, contact support with your payment ID.')
+            setBusy(false)
+          }
+        },
+        modal: { ondismiss: () => setBusy(false) },
+      })
+      checkout.on('payment.failed', () => setError('The payment did not go through. Please try again or use another method.'))
+      checkout.open()
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not start checkout. Please try again.')
+      setBusy(false)
+    }
+  }
+
+  return (
+    <>
+      <button type="button" onClick={enroll} disabled={busy || isPending} className={ENROLL_CLASS}>
+        {busy ? 'Opening checkout…' : 'Enroll in Course'}
+      </button>
+      {error ? (
+        <p role="alert" className="mt-3 text-sm text-red-600">
+          {error}
+        </p>
+      ) : null}
+    </>
+  )
+}
+
 export default function CourseContent() {
   const { courseId } = useParams()
   const course = lookup(COURSES, courseId)
@@ -140,9 +228,7 @@ export default function CourseContent() {
                   <div className="mt-1 text-sm text-gray-500 font-medium">{page.priceMeta}</div>
                 </div>
 
-                <button className="btn-purple-animated mt-6 w-full h-12 rounded-xl text-primary-foreground font-bold hover:opacity-90 transition-opacity">
-                  Enroll in Course
-                </button>
+                <EnrollButton courseId={course.id} />
 
                 <div className="mt-5 text-center text-sm text-gray-400">{page.enrollNote}</div>
               </div>
