@@ -1,0 +1,8 @@
+RAZORPAY_KEY_ID=rzp_test_replace
+RAZORPAY_KEY_SECRET=replace
+RAZORPAY_WEBHOOK_SECRET=replace
+# Empty = emails are printed to the dev server console instead of sent.
+RESEND_API_KEY=
+TURNSTILE_SECRET=1x0000000000000000000000000000000AA
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
