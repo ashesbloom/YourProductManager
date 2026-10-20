@@ -1,6 +1,8 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "ypm",
+  // Khushbu's Cloudflare account. Pinned so a deploy can never land in another account.
+  "account_id": "a85754fd7bd060489b3eb722a8200cf7",
   "main": "worker/index.ts",
   "compatibility_date": "2026-10-01",
   "assets": {
@@ -9,10 +11,10 @@
     "run_worker_first": ["/api/*", "/media/*"]
   },
   "d1_databases": [
-    // database_id: replace with the id from `wrangler d1 create ypm --location apac` before any remote command.
-    { "binding": "DB", "database_name": "ypm", "database_id": "00000000-0000-0000-0000-000000000000", "migrations_dir": "migrations" }
+    // database_id: from `wrangler d1 create ypm --location apac` in the account above.
+    { "binding": "DB", "database_name": "ypm", "database_id": "14b6b8ec-5464-47be-a57b-63baf42e5fa3", "migrations_dir": "migrations" }
   ],
   "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "ypm-media" }],
-  "vars": { "EMAIL_FROM": "YPM <no-reply@yourpm.in>" },
+  "vars": { "EMAIL_FROM": "YPM <no-reply@yourproductmanager.in>" },
   "observability": { "enabled": true }
 }

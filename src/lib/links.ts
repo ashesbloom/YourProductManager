@@ -2,7 +2,7 @@
 export const CALENDLY_URL = 'https://calendly.com/REPLACE_ME/mock-interview'
 export const whatsappLink = (text: string) => `https://wa.me/91XXXXXXXXXX?text=${encodeURIComponent(text)}`
 export const WHATSAPP_URL = whatsappLink('Hi, I have a question about YPM')
-export const SUPPORT_EMAIL = 'support@yourpm.in'
+export const SUPPORT_EMAIL = 'support@yourproductmanager.in'
 
 /**
  * Same-site path to land on after login, else `fallback`. Resolving against a dummy origin catches
