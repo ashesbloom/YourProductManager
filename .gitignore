@@ -25,6 +25,8 @@ dist-ssr
 
 # Cloudflare
 .dev.vars
+.dev.vars.*
+!.dev.vars.example
 .wrangler
 
 # Encoded lecture output (lives in R2, not git)

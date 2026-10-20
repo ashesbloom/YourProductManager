@@ -30,9 +30,8 @@ Lecture ids are permanent (R2 keys and progress rows use them). Never renumber a
 
 ```bash
 npm run db:migrate:remote
-for k in RAZORPAY_KEY_ID RAZORPAY_KEY_SECRET RAZORPAY_WEBHOOK_SECRET RESEND_API_KEY TURNSTILE_SECRET GOOGLE_CLIENT_ID GOOGLE_CLIENT_SECRET; do
-  npx wrangler secret put "$k"
-done
+cp .dev.vars.example .dev.vars.production   # fill in the real values (git-ignored)
+npx wrangler secret bulk .dev.vars.production
 npm run deploy
 ```
 
@@ -47,10 +46,10 @@ Before taking payments:
 
 ```bash
 q() { npx wrangler d1 execute ypm --remote --command "$1"; }
-# Grant a course
-q "INSERT INTO enrollments(user_id, course_id, source, granted_at) SELECT id, 'foundations', 'admin', unixepoch()*1000 FROM users WHERE email = 'student@example.com' ON CONFLICT(user_id, course_id) DO UPDATE SET revoked_at = NULL, source = 'admin'"
+# Grant a course (an AI PM purchase grants both 'ai-product' and 'foundations')
+q "INSERT INTO enrollments(user_id, course_id, source, granted_at) SELECT id, 'ai-product', 'admin', unixepoch()*1000 FROM users WHERE email = 'student@example.com' ON CONFLICT(user_id, course_id) DO UPDATE SET revoked_at = NULL, source = 'admin'"
 # Revoke a course
-q "UPDATE enrollments SET revoked_at = unixepoch()*1000 WHERE course_id = 'foundations' AND user_id = (SELECT id FROM users WHERE email = 'student@example.com')"
+q "UPDATE enrollments SET revoked_at = unixepoch()*1000 WHERE course_id = 'ai-product' AND user_id = (SELECT id FROM users WHERE email = 'student@example.com')"
 # Recent payments
 q "SELECT o.id, u.email, o.product_id, o.amount / 100.0 AS inr, o.status, datetime(o.created_at / 1000, 'unixepoch') AS at FROM orders o JOIN users u ON u.id = o.user_id ORDER BY o.created_at DESC LIMIT 20"
 # A student's progress
