@@ -9,7 +9,7 @@ out="media/$id"
 rm -rf "$out" && mkdir -p "$out"
 
 ffmpeg -hide_banner -loglevel error -stats -y ${CLIP:+-t "$CLIP"} -i "$src" \
-  -filter_complex "[0:v]split=2[a][b];[a]scale=-2:720[v720];[b]scale=-2:360[v360]" \
+  -filter_complex "[0:v]split=2[a][b];[a]scale=-2:'min(720,ih)'[v720];[b]scale=-2:'min(360,ih)'[v360]" \
   -map "[v720]" -map 0:a:0 -map "[v360]" -map 0:a:0 \
   -c:v libx264 -preset slow -profile:v main -crf 23 \
   -maxrate:v:0 1500k -bufsize:v:0 3000k -maxrate:v:1 400k -bufsize:v:1 800k \
