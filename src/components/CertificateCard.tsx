@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
 import { useReducedMotion } from 'framer-motion'
 import { Lock } from 'lucide-react'
+import { Logo } from './Logo'
 
 type CertificateCardProps = {
   unlocked: boolean
@@ -89,9 +90,7 @@ export function CertificateCard({
           <div className="flex items-start justify-between">
             <div>
               <div className="flex items-end gap-[1.1cqw]">
-                <span className="font-['Playfair_Display'] text-[4.6cqw] font-black leading-none tracking-tight text-[#0B1020]">
-                  YPM
-                </span>
+                <Logo className="h-[3.6cqw] w-auto shrink-0 text-[#0B1020]" />
                 <span className="pb-[0.3cqw] text-[1.35cqw] font-extrabold uppercase leading-[1.25] tracking-wide text-[#0B1020]">
                   Your
                   <br />
@@ -118,8 +117,8 @@ export function CertificateCard({
                 className="absolute inset-[0.95cqw] rounded-full"
                 style={{ background: 'radial-gradient(circle at 34% 28%,#F6E6AE 0%,#D9B544 48%,#A9780C 100%)' }}
               />
-              <span className="absolute inset-0 flex items-center justify-center font-['Playfair_Display'] text-[2.6cqw] font-black text-[#1B1405]">
-                YPM
+              <span className="absolute inset-0 flex items-center justify-center text-[#1B1405]">
+                <Logo className="w-[4.6cqw]" />
               </span>
             </div>
           </div>

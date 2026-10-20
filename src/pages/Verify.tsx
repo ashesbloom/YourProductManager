@@ -25,7 +25,7 @@ export default function Verify() {
       <div className="relative mx-auto max-w-3xl text-center">
         <div className="pointer-events-none absolute left-1/2 -top-10 h-80 w-80 -translate-x-1/2 rounded-full bg-primary/15 blur-3xl" />
         <div data-reveal className="relative">
-          <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-linear-to-br from-[#a855f7] to-[#7e22ce] shadow-[0_0_40px_-8px_rgba(168,85,247,0.8)]">
+          <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-brand shadow-[0_0_40px_-8px_rgba(124,58,237,0.8)]">
             <ShieldCheck size={26} className="text-white" />
           </span>
           <span className="mt-6 block text-primary text-sm font-semibold uppercase tracking-wider">

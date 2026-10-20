@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { ArrowUpRight, Linkedin, Mail, MessageCircle, Phone, Youtube, X } from 'lucide-react'
+import { Logo } from '@/components/Logo'
 import { CALENDLY_URL, SUPPORT_EMAIL, WHATSAPP_URL } from '@/lib/links'
 
 const columns = [
@@ -8,6 +9,7 @@ const columns = [
     links: [
       { href: '/courses', label: 'Courses' },
       { href: '/about', label: 'About' },
+      { href: '/#book', label: 'The book' },
       { href: '/blog', label: 'Blog' },
       { href: '/resources', label: 'Resources' },
     ],
@@ -40,7 +42,7 @@ export function Footer() {
         <div className="grid grid-cols-2 gap-x-6 gap-y-10 md:grid-cols-[1.3fr_1fr_1fr_1.3fr]">
           <div className="col-span-2 md:col-span-1">
             <Link to="/" className="inline-flex items-center gap-3" aria-label="Your Product Manager home">
-              <img src="/vite.svg" alt="" className="h-8 w-8" />
+              <Logo className="h-6 w-auto text-white" />
               <span className="font-['Montserrat'] text-sm font-black uppercase tracking-wide text-white/90">
                 Your Product Manager
               </span>
@@ -107,9 +109,6 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="mt-12 border-t border-white/10 pt-6 text-xs text-white/40">
-          © {new Date().getFullYear()} Your Product Manager. All Rights Reserved.
-        </div>
       </div>
     </footer>
   )

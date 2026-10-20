@@ -126,9 +126,9 @@ export function ReelsSection() {
 
   return (
     <section className="pb-24 overflow-hidden [--reel-w:264px] md:[--reel-w:338px]">
-      <h3 className="mb-12 px-4 text-center font-['Montserrat'] text-2xl md:text-3xl font-black uppercase tracking-wide text-white">
-        Hear it from them
-      </h3>
+      <h2 data-reveal className="container mb-12 font-['Montserrat'] text-3xl font-bold tracking-tight text-white md:text-4xl">
+        Success stories
+      </h2>
 
       <div
         className="relative mx-auto flex h-[calc(var(--reel-w)*16/9)] max-w-5xl items-center justify-center"

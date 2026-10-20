@@ -59,8 +59,8 @@ export default function Contact() {
       </section>
 
       {/* Channels */}
-      <section className="px-4 pb-16">
-        <div className="mx-auto grid max-w-6xl md:grid-cols-3 gap-x-5 gap-y-5">
+      <section className="pb-16">
+        <div className="container grid md:grid-cols-3 gap-x-5 gap-y-5">
           {CHANNELS.map(({ icon: Icon, title, body, cta, href, featured }) => (
             <a
               data-reveal
@@ -70,11 +70,11 @@ export default function Contact() {
               rel="noreferrer"
               className={`group flex flex-col rounded-3xl border p-7 transition-colors ${
                 featured
-                  ? 'border-purple-400/50 bg-linear-to-br from-[#7e22ce]/50 to-[#07070c] hover:border-purple-300'
+                  ? 'border-brand/60 bg-brand/15 hover:border-brand'
                   : 'border-white/10 bg-[#07070c] hover:border-purple-500/40'
               }`}
             >
-              <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-linear-to-br from-[#a855f7] to-[#7e22ce]">
+              <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand">
                 <Icon size={22} className="text-white" />
               </span>
               <h2 className="mt-6 text-xl font-bold">{title}</h2>
@@ -90,7 +90,7 @@ export default function Contact() {
 
       {/* Form */}
       <section className="px-4 pb-24">
-        <div data-reveal className="mx-auto max-w-3xl rounded-3xl bg-linear-to-br from-purple-500/60 via-purple-500/10 to-purple-500/40 p-px">
+        <div data-reveal className="mx-auto max-w-3xl rounded-3xl border border-brand/40">
           <div className="rounded-3xl bg-[#07070c] p-7 md:p-10">
             <h2 className="text-2xl md:text-3xl font-bold">Send a message</h2>
             <p className="mt-2 text-white/60">

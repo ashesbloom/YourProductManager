@@ -16,28 +16,23 @@ const fadeIn = {
 type CoursePage = {
   priceMeta: string
   enrollNote: string
-  includedFree: Array<{ title: string; description: string }>
+  included: Array<{ title: string; description: string }>
 }
 
 const FREE_NOTICE =
   'Free lectures are provided to help you understand the fundamentals and teaching\napproach before enrolling.'
-const FORMAT = ['Lecture-based', 'Recorded and self-paced', 'For independent learners', 'Lifetime access']
+const FORMAT = ['Recorded and self-paced', '3 AI product case-study assignments', 'Personal learning dashboard', 'Lifetime access']
 
 const PAGES: Record<string, CoursePage> = {
   'ai-product': {
     priceMeta: '(incl. GST) • Launch Price',
-    enrollNote: 'Founding price available for early learners only',
-    includedFree: [
-      { title: 'Interview Ready', description: '3 simulated 1:1 PM interviews (1hr each) + project review' },
-      { title: 'Elite Presence', description: 'LinkedIn & resume optimization for AI PM hiring' },
-    ],
-  },
-  foundations: {
-    priceMeta: '(incl. GST) • Introductory Price',
-    enrollNote: 'Founding price available for early learners only',
-    includedFree: [
-      { title: 'Interview Ready', description: '3 simulated 1:1 PM interviews (1hr each) + project review' },
-      { title: 'Elite Presence', description: 'LinkedIn & resume optimization for PM hiring' },
+    enrollNote: 'Foundations course included free',
+    included: [
+      { title: 'Foundations course', description: `${COURSES.foundations.title}, included free` },
+      { title: 'Mock interview', description: '2-hour 1:1 mock interview session' },
+      { title: 'Resume review', description: 'Resume build and correction by a mentor' },
+      { title: '1:1 sessions', description: 'Personalised sessions based on your background' },
+      { title: 'Certificate', description: 'Issued after you complete the course' },
     ],
   },
 }
@@ -74,7 +69,7 @@ function LectureRow({ courseId, lecture }: { courseId: string; lecture: Lecture 
       {isFree ? (
         <Link
           to={`/learn/${courseId}/${lecture.id}`}
-          className="btn-purple-animated shrink-0 inline-flex items-center justify-center px-5 h-10 rounded-full text-primary-foreground font-bold"
+          className="shrink-0 inline-flex items-center justify-center px-5 h-10 rounded-full bg-brand text-white font-bold transition-colors hover:bg-brand-hover"
         >
           Watch Free
         </Link>
@@ -97,7 +92,7 @@ declare global {
 }
 
 const ENROLL_CLASS =
-  'btn-purple-animated mt-6 inline-flex w-full h-12 items-center justify-center rounded-xl text-primary-foreground font-bold hover:opacity-90 transition-opacity disabled:opacity-60'
+  'mt-6 inline-flex w-full h-12 items-center justify-center rounded-xl bg-brand text-white font-bold transition-colors hover:bg-brand-hover disabled:opacity-60'
 
 function EnrollButton({ courseId }: { courseId: string }) {
   const { data: me, isPending } = useMe()
@@ -133,6 +128,7 @@ function EnrollButton({ courseId }: { courseId: string }) {
         amount: order.amount,
         currency: 'INR',
         name: 'Your Product Manager',
+        image: `${location.origin}/apple-touch-icon.png`,
         description: order.name,
         prefill: order.prefill,
         theme: { color: '#8b5cf6' },
@@ -177,13 +173,15 @@ export default function CourseContent() {
   const page = lookup(PAGES, courseId)
   if (!course || !page) return <Navigate to="/courses" replace />
   const product = PRODUCTS[course.id]
-  const lectures = courseLectures(course.id)
-  const lockedCount = lectures.filter((l) => !l.free).length
+  // Every course this purchase unlocks, the page's own course first.
+  const groups = product.grants.map((id) => ({ course: COURSES[id], lectures: courseLectures(id) }))
+  const total = groups.reduce((n, g) => n + g.lectures.length, 0)
+  const lockedCount = groups.reduce((n, g) => n + g.lectures.filter((l) => !l.free).length, 0)
 
   return (
     <div className="bg-white">
-      <section className="pt-28 pb-20 px-4">
-        <div className="max-w-7xl mx-auto">
+      <section className="pt-28 pb-20">
+        <div className="container">
           <div className="grid lg:grid-cols-[1fr_360px] gap-8 items-start">
             {/* Left: Course content */}
             <motion.div initial="hidden" animate="visible" variants={fadeIn} transition={{ duration: 0.4 }}>
@@ -194,14 +192,21 @@ export default function CourseContent() {
                 {FREE_NOTICE}
               </div>
 
-              <div className="mt-8 space-y-4">
-                {lectures.map((lecture) => (
-                  <LectureRow key={lecture.id} courseId={course.id} lecture={lecture} />
-                ))}
-                {lockedCount > 0 ? (
-                  <p className="pt-2 text-center text-sm text-gray-400">Enroll to unlock all {lectures.length} lectures</p>
-                ) : null}
-              </div>
+              {groups.map((group, i) => (
+                <div key={group.course.id} className="mt-8 space-y-4">
+                  {i > 0 ? (
+                    <h2 className="pt-6 text-xl font-black text-[#0a0a0f]">
+                      {group.course.title} <span className="text-sm font-semibold text-green-600">Included free</span>
+                    </h2>
+                  ) : null}
+                  {group.lectures.map((lecture) => (
+                    <LectureRow key={lecture.id} courseId={group.course.id} lecture={lecture} />
+                  ))}
+                </div>
+              ))}
+              {lockedCount > 0 ? (
+                <p className="pt-6 text-center text-sm text-gray-400">Enroll to unlock all {total} lectures</p>
+              ) : null}
 
               <div className="mt-10">
                 <Link to="/courses" className="text-primary font-bold">
@@ -235,10 +240,10 @@ export default function CourseContent() {
 
               {/* Included free */}
               <div className="rounded-2xl bg-[#0a0a0f] border border-white/10 shadow-2xl p-6">
-                <div className="text-white font-black">Included FREE</div>
+                <div className="text-white font-black">What's included</div>
 
                 <div className="mt-5 space-y-5">
-                  {page.includedFree.map((item) => (
+                  {page.included.map((item) => (
                     <div key={item.title} className="flex items-start gap-3">
                       <div className="mt-0.5 w-8 h-8 rounded-lg bg-[#FBBF24]/15 flex items-center justify-center shrink-0">
                         <Star size={16} className="text-[#FBBF24]" />

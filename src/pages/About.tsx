@@ -3,6 +3,10 @@ import {
   ArrowRight, BadgeCheck, BookOpen, Compass, Layers, MessagesSquare, PlayCircle,
   Scale, Sparkles, Target, Timer, TrendingUp, UserRound, Users,
 } from 'lucide-react'
+import founderPhoto from '@/assets/khushbu-front.avif'
+import { Book3D } from '@/components/Book3D'
+import { SpatialPortrait } from '@/components/SpatialPortrait'
+import { BOOK, KINDLE_URL } from '@/data/book'
 
 const STANDS_FOR = [
   { icon: Compass, text: 'Practical product thinking over theory-heavy explanations' },
@@ -33,9 +37,6 @@ const HIGHLIGHTS = [
   { icon: PlayCircle, title: 'Self-Paced', note: 'Recorded lectures' },
 ]
 
-// Drop the founder photo in /public and set its path here, e.g. '/khushbu.jpg'. Empty shows the placeholder.
-const FOUNDER_PHOTO = ''
-
 const eyebrow = 'text-primary text-sm font-semibold uppercase tracking-wider'
 const h2 = 'mt-2 text-3xl md:text-4xl font-bold text-white tracking-tight'
 
@@ -43,10 +44,10 @@ export default function About() {
   return (
     <div className="bg-black text-white">
       {/* Hero */}
-      <section className="relative overflow-hidden px-4 pt-32 pb-20 md:pt-40 md:pb-28">
+      <section className="relative overflow-hidden pt-32 pb-20 md:pt-40 md:pb-28">
         {/* Purple wash rising from the bottom-right, behind the portrait. */}
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_75%_85%,rgba(124,58,237,0.28),transparent_60%)]" />
-        <div className="relative mx-auto grid max-w-6xl md:grid-cols-[1.15fr_1fr] items-center gap-x-12 gap-y-14">
+        <div className="container relative grid md:grid-cols-[1.15fr_1fr] items-center gap-x-12 gap-y-14">
           <div data-reveal>
             <span className="inline-block rounded-full bg-[#6d28d9] px-4 py-1.5 text-xs font-bold uppercase tracking-wider text-white">
               About YPM
@@ -69,25 +70,19 @@ export default function About() {
             </p>
           </div>
 
-          <div data-reveal className="flex justify-center">
-            <div className="relative aspect-square w-full max-w-[17rem] md:max-w-[22rem] overflow-hidden rounded-full border-2 border-[#8b5cf6]/70 bg-[radial-gradient(circle_at_50%_35%,#5b2a8c,#2a1145_70%)] shadow-[0_0_80px_-10px_rgba(139,92,246,0.65)]">
-              {FOUNDER_PHOTO ? (
-                <img src={FOUNDER_PHOTO} alt="Khushbu Sharma" className="absolute inset-0 h-full w-full object-cover" />
-              ) : (
-                <UserRound size={84} strokeWidth={1.5} className="absolute left-1/2 top-[30%] -translate-x-1/2 text-white/80" />
-              )}
-              <div className="absolute inset-x-0 bottom-0 bg-linear-to-t from-black/75 to-transparent pt-16 pb-[16%] text-center">
-                <div className="font-bold">Khushbu Sharma</div>
-                <div className="mt-0.5 text-sm text-white/65">Founder, YPM</div>
-              </div>
+          {/* The home page's 3D portrait, standing on the strip below; the mask fades its cut edges. */}
+          <div data-reveal className="relative -mb-20 self-end md:-mb-28">
+            <div className="pointer-events-none absolute left-1/2 top-[28%] h-[55%] w-[85%] -translate-x-1/2 rounded-full bg-brand/35 blur-[90px]" />
+            <div className="relative mx-auto w-[min(100%,22rem)] md:mr-0 md:w-[min(100%,26rem)] [mask-composite:intersect] [mask-image:linear-gradient(to_bottom,#000_62%,transparent_97%),linear-gradient(to_right,transparent,#000_12%,#000_88%,transparent)]">
+              <SpatialPortrait src={founderPhoto} alt="Khushbu Sharma, founder of YPM" focus={[0.52, 0.28]} className="aspect-[894/1300] w-full" />
             </div>
           </div>
         </div>
       </section>
 
       {/* Highlights strip */}
-      <section className="border-y border-white/10 bg-[#07070c] px-4 py-10">
-        <ul className="mx-auto grid max-w-4xl grid-cols-3 gap-x-4 text-center">
+      <section className="border-y border-white/10 bg-[#07070c] py-10">
+        <ul className="container grid grid-cols-3 gap-x-4 text-center">
           {HIGHLIGHTS.map(({ icon: Icon, title, note }) => (
             <li data-reveal key={title}>
               <Icon size={26} className="mx-auto text-[#8b5cf6]" />
@@ -99,8 +94,8 @@ export default function About() {
       </section>
 
       {/* Story */}
-      <section className="px-4 pt-20">
-        <div data-reveal className="mx-auto max-w-3xl space-y-5 text-lg leading-relaxed text-white/70">
+      <section className="container pt-20">
+        <div data-reveal className="max-w-3xl space-y-5 text-lg leading-relaxed text-white/70">
           <span className={eyebrow}>Our story</span>
           <p>
             Founded by <span className="font-semibold text-white">Khushbu Sharma</span>, Product Management
@@ -123,10 +118,27 @@ export default function About() {
         </div>
       </section>
 
+      {/* The book */}
+      <section className="container pt-20">
+        <div className="flex flex-col gap-10 sm:flex-row sm:items-center sm:gap-14">
+          <Book3D compact className="shrink-0" />
+          <div data-reveal>
+            <span className={eyebrow}>Author</span>
+            <h2 className={h2}>{BOOK.title}</h2>
+            <p className="mt-4 max-w-md leading-relaxed text-white/65">
+              Khushbu’s book on shipping AI that holds up in production.
+            </p>
+            <a href={KINDLE_URL} target="_blank" rel="noreferrer" className="btn-primary mt-8">
+              Read on Kindle
+            </a>
+          </div>
+        </div>
+      </section>
+
       {/* What YPM stands for */}
-      <section className="px-4 py-20">
-        <div className="mx-auto max-w-6xl">
-          <div data-reveal className="text-center">
+      <section className="container py-20">
+        <div>
+          <div data-reveal>
             <span className={eyebrow}>Principles</span>
             <h2 className={h2}>What YPM Stands For</h2>
           </div>
@@ -137,14 +149,14 @@ export default function About() {
                 key={text}
                 className="rounded-2xl border border-white/10 bg-[#07070c] p-6 transition-colors hover:border-purple-500/40"
               >
-                <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-linear-to-br from-[#a855f7] to-[#7e22ce]">
+                <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand">
                   <Icon size={20} className="text-white" />
                 </span>
                 <p className="mt-5 font-semibold leading-snug text-white/90">{text}</p>
               </div>
             ))}
           </div>
-          <p data-reveal className="mx-auto mt-10 max-w-3xl text-center leading-relaxed text-white/60">
+          <p data-reveal className="mt-10 max-w-3xl leading-relaxed text-white/60">
             YPM is not positioned as a traditional institute. It is an independent, founder-driven learning
             space built for individuals who want to think clearly, make responsible decisions, and grow
             steadily in product and strategy roles.
@@ -153,8 +165,8 @@ export default function About() {
       </section>
 
       {/* Focus + Learning */}
-      <section className="px-4 py-20">
-        <div className="mx-auto grid max-w-6xl lg:grid-cols-2 gap-x-8 gap-y-8">
+      <section className="container py-20">
+        <div className="grid lg:grid-cols-2 gap-x-8 gap-y-8">
           <div data-reveal className="rounded-3xl border border-white/10 bg-[#07070c] p-8 md:p-10">
             <span className={eyebrow}>Focus</span>
             <h2 className={h2}>Product Management & Consulting</h2>
@@ -201,8 +213,8 @@ export default function About() {
       </section>
 
       {/* Founder's note */}
-      <section className="px-4 py-20">
-        <div data-reveal className="mx-auto max-w-3xl rounded-3xl bg-linear-to-br from-purple-500/60 via-purple-500/10 to-[#FBBF24]/40 p-px">
+      <section className="container py-20">
+        <div data-reveal className="max-w-3xl rounded-3xl border border-brand/40">
           <article className="rounded-3xl bg-[#07070c] p-8 md:p-14">
             <span className={eyebrow}>Founder's Note</span>
             <div className="mt-6 space-y-5 text-lg leading-relaxed text-white/75">
@@ -243,10 +255,10 @@ export default function About() {
       </section>
 
       {/* CTA */}
-      <section className="px-4 pt-8 pb-24 text-center">
+      <section className="container pt-8 pb-24">
         <div data-reveal>
           <h2 className="text-3xl md:text-4xl font-bold tracking-tight">Start building clarity</h2>
-          <p className="mx-auto mt-4 max-w-xl text-white/60">
+          <p className="mt-4 max-w-xl text-white/60">
             Self-paced programs that start from the fundamentals.
           </p>
           <Link to="/courses" className="btn-primary mt-8 inline-flex">

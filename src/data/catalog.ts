@@ -67,19 +67,11 @@ export const PRODUCTS: Record<string, Product> = {
   'ai-product': {
     id: 'ai-product',
     title: 'AI Product Management',
-    pricePaise: 11_999 * 100,
-    oldPricePaise: 29_999 * 100,
+    pricePaise: 9_999 * 100,
+    oldPricePaise: 25_000 * 100,
     priceLabel: 'Launch price',
-    // The AI programme includes the Foundations lectures free.
+    // The only product on sale. Foundations is not sold separately; it comes free with this.
     grants: ['ai-product', 'foundations'],
-  },
-  foundations: {
-    id: 'foundations',
-    title: 'Product Management (Foundations)',
-    pricePaise: 2_999 * 100,
-    oldPricePaise: 6_999 * 100,
-    priceLabel: 'Introductory price',
-    grants: ['foundations'],
   },
 }
 

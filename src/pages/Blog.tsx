@@ -27,7 +27,7 @@ export default function Blog() {
   return (
     <div className="bg-black text-foreground min-h-screen">
       <section className="pt-28 pb-10">
-        <div className="max-w-6xl mx-auto px-4">
+        <div className="container">
           <motion.div
             initial="hidden"
             animate="visible"

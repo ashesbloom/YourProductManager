@@ -14,16 +14,16 @@ test('catalog: products grant existing courses at the agreed prices', () => {
     assert.ok(Number.isInteger(p.pricePaise) && p.pricePaise > 0, p.id)
     for (const c of p.grants) assert.ok(lookup(COURSES, c), `${p.id} grants unknown course ${c}`)
   }
-  assert.equal(PRODUCTS['ai-product'].pricePaise, 1_199_900)
+  assert.equal(PRODUCTS['ai-product'].pricePaise, 999_900)
   assert.deepEqual(PRODUCTS['ai-product'].grants, ['ai-product', 'foundations'])
-  assert.equal(PRODUCTS.foundations.pricePaise, 299_900)
+  assert.deepEqual(Object.keys(PRODUCTS), ['ai-product']) // Foundations is not sold on its own
 })
 
 test('catalog: lookup ignores prototype keys and non-strings', () => {
   assert.equal(lookup(PRODUCTS, '__proto__'), undefined)
   assert.equal(lookup(PRODUCTS, 'constructor'), undefined)
   assert.equal(lookup(PRODUCTS, 42), undefined)
-  assert.equal(lookup(PRODUCTS, 'foundations')?.id, 'foundations')
+  assert.equal(lookup(PRODUCTS, 'ai-product')?.id, 'ai-product')
 })
 
 test('catalog: formatINR uses Indian digit grouping', () => {
@@ -247,45 +247,46 @@ test('pay: client verify and webhook racing grant access exactly once', async ()
 
 test('pay: failed attempt then success on the same order; a late failure never downgrades', async () => {
   const db = testDb()
-  await seedOrder(db, 'order_A', 'foundations')
+  await seedOrder(db, 'order_A', 'ai-product')
   await markFailed(db, 'order_A', 'pay_1', 1)
   assert.ok(await fulfill(db, 'order_A', 'pay_2', 2))
   await markFailed(db, 'order_A', 'pay_3', 3)
   const { status } = (await db.prepare(`SELECT status FROM orders WHERE id = 'order_A'`).first()) as { status: string }
   assert.equal(status, 'paid')
-  assert.deepEqual(await active(db), ['foundations'])
+  assert.deepEqual(await active(db), ['ai-product', 'foundations'])
 })
 
 test('pay: unknown order is a no-op', async () => {
   assert.equal(await fulfill(testDb(), 'order_missing', 'pay', 1), null)
 })
 
-test('pay: ownsAll blocks paying twice but allows the AI upgrade', async () => {
+test('pay: ownsAll blocks paying twice', async () => {
   const db = testDb()
-  await seedOrder(db, 'order_A', 'foundations')
+  const grants = PRODUCTS['ai-product'].grants
+  await seedOrder(db, 'order_A', 'ai-product')
+  assert.equal(await ownsAll(db, 1, grants), false)
   await fulfill(db, 'order_A', 'pay_1', 1)
-  assert.equal(await ownsAll(db, 1, ['foundations']), true)
-  assert.equal(await ownsAll(db, 1, ['ai-product', 'foundations']), false)
+  assert.equal(await ownsAll(db, 1, grants), true)
 })
 
 test('pay: partial refund keeps access; full refund revokes', async () => {
   const db = testDb()
-  await seedOrder(db, 'order_A', 'foundations')
+  await seedOrder(db, 'order_A', 'ai-product')
   await applyEvent(db, paidEvent('order_A', 'pay_A'), 1)
   await applyEvent(db, refundEvent('order_A', 'pay_A', 'partial'), 2)
-  assert.deepEqual(await active(db), ['foundations'])
+  assert.deepEqual(await active(db), ['ai-product', 'foundations'])
   await applyEvent(db, refundEvent('order_A', 'pay_A', 'full'), 3)
   assert.deepEqual(await active(db), [])
 })
 
 test('pay: full refund revokes only what that order granted', async () => {
   const db = testDb()
-  await seedOrder(db, 'order_A', 'foundations')
+  await seedOrder(db, 'order_A', 'ai-product')
   await fulfill(db, 'order_A', 'pay_A', 1)
   await seedOrder(db, 'order_B', 'ai-product')
   await fulfill(db, 'order_B', 'pay_B', 2)
   await refund(db, 'pay_A', 3)
-  assert.deepEqual(await active(db), ['ai-product', 'foundations']) // order B still grants Foundations
+  assert.deepEqual(await active(db), ['ai-product', 'foundations']) // order B still grants both
   await refund(db, 'pay_B', 4)
   assert.deepEqual(await active(db), [])
 })
@@ -344,17 +345,17 @@ test('progress: completes once at 85% across sessions; seeking adds nothing; res
 
 test('pay: a failure while granting leaves the order retryable (no paid-without-access)', async () => {
   const db = testDb()
-  await seedOrder(db, 'order_A', 'foundations')
+  await seedOrder(db, 'order_A', 'ai-product')
   await db.prepare(`CREATE TRIGGER boom BEFORE INSERT ON enrollments BEGIN SELECT RAISE(ABORT, 'boom'); END`).run()
   await assert.rejects(fulfill(db, 'order_A', 'pay_1', 1))
   await db.prepare(`DROP TRIGGER boom`).run()
   assert.ok(await fulfill(db, 'order_A', 'pay_1', 2)) // the webhook retry repairs it
-  assert.deepEqual(await active(db), ['foundations'])
+  assert.deepEqual(await active(db), ['ai-product', 'foundations'])
 })
 
 test('pay: a failure while revoking leaves the refund retryable', async () => {
   const db = testDb()
-  await seedOrder(db, 'order_A', 'foundations')
+  await seedOrder(db, 'order_A', 'ai-product')
   await fulfill(db, 'order_A', 'pay_A', 1)
   await db.prepare(`CREATE TRIGGER boom BEFORE UPDATE ON enrollments BEGIN SELECT RAISE(ABORT, 'boom'); END`).run()
   await assert.rejects(refund(db, 'pay_A', 2))

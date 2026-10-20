@@ -26,12 +26,15 @@ const NotFound = lazy(() => import('@/pages/NotFound'))
  * mounted — otherwise there would be no [data-reveal] elements to find.
  */
 function RevealScope({ children }: { children: ReactNode }) {
-  const { pathname } = useLocation()
+  const { pathname, hash } = useLocation()
   // The router keeps scroll position across routes; a footer link would open the next page at its bottom.
+  // A hash (the footer's /#book) lands on that section instead.
   useEffect(() => {
     // Instant, not the page's smooth scroll: ScrollTrigger.refresh() below would cancel an animated one.
-    window.scrollTo({ top: 0, behavior: 'instant' })
-  }, [pathname])
+    const target = hash && document.getElementById(hash.slice(1))
+    if (target) target.scrollIntoView({ behavior: 'instant' })
+    else window.scrollTo({ top: 0, behavior: 'instant' })
+  }, [pathname, hash])
   useScrollReveal(pathname)
   return <>{children}</>
 }

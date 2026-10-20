@@ -22,28 +22,21 @@ export function Navbar() {
   return (
     <header className="fixed top-0 left-0 right-0 z-50 transition-none">
       <PillNav
-        logo="/vite.svg"
-        logoAlt="YPM Logo"
         items={items}
         activeHref={location.pathname}
         className="custom-nav"
         ease="power2.easeOut"
         baseColor="#09090f"
-        pillColor="#fde7ff"
+        pillColor="#14141c"
         hoveredPillTextColor="#ffffff"
-        pillTextColor="#3a0f53"
+        pillTextColor="#ffffff"
       />
       <div className="w-full flex justify-center pointer-events-none select-none">
         <div
           className="w-full"
           style={{
-            height: '5px',
-            marginTop: '-2px',
-            borderRadius: '3px',
-            opacity: 0.7,
-            boxShadow: '0 1px 8px 0 #a78bfa44',
-            background:
-              'linear-gradient(90deg, rgba(167,139,250,0) 0%, #a78bfa 10%, #f472b6 50%, #a78bfa 90%, rgba(167,139,250,0) 100%)',
+            height: '1px',
+            background: 'rgba(139, 92, 246, 0.35)',
           }}
         />
       </div>

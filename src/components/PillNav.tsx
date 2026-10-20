@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import { Link } from 'react-router-dom'
 import { gsap } from 'gsap'
+import { Logo } from './Logo'
 import './PillNav.css'
 
 type PillNavItem = {
@@ -10,8 +11,6 @@ type PillNavItem = {
 }
 
 type PillNavProps = {
-  logo: string
-  logoAlt?: string
   items: PillNavItem[]
   activeHref: string
   className?: string
@@ -39,8 +38,6 @@ function isRouterLink(href: string) {
 }
 
 export default function PillNav({
-  logo,
-  logoAlt = 'Logo',
   items,
   activeHref,
   className = '',
@@ -122,8 +119,8 @@ export default function PillNav({
   return (
     <div className="pill-nav-container">
       <nav className={`pill-nav ${className}`} aria-label="Primary" style={cssVars}>
-        <Link className="pill-logo" to="/" aria-label="Home">
-          <img src={logo} alt={logoAlt} />
+        <Link className="pill-logo" to="/" aria-label="Your Product Manager home">
+          <Logo />
         </Link>
 
         <div className="pill-nav-items desktop-only">
