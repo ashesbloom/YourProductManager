@@ -31,7 +31,7 @@ test('catalog: formatINR uses Indian digit grouping', () => {
   assert.equal(formatINR(29_990_000), '₹2,99,900')
 })
 
-test('catalog: AI PM lists all 50 lectures', { todo: 'awaiting the full lecture list from Drive; Task 13 removes this todo' }, () => {
+test('catalog: AI PM lists all 50 lectures', () => {
   assert.equal(courseLectures('ai-product').length, 50)
 })
 import { createHmac } from 'node:crypto'
