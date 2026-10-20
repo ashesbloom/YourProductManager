@@ -5,6 +5,10 @@
   "account_id": "a85754fd7bd060489b3eb722a8200cf7",
   "main": "worker/index.ts",
   "compatibility_date": "2026-10-01",
+  // Served only on the real domain: no *.workers.dev or preview URLs.
+  "workers_dev": false,
+  "preview_urls": false,
+  "routes": [{ "pattern": "yourproductmanager.in", "custom_domain": true }],
   "assets": {
     // Every non-API route serves index.html; only these paths run the Worker (page loads stay free).
     "not_found_handling": "single-page-application",

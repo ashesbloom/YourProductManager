@@ -1,8 +1,10 @@
-// TODO: replace with the live Calendly event and WhatsApp number.
+// TODO: replace with the live Calendly event, WhatsApp number and Crisp website ID.
 export const CALENDLY_URL = 'https://calendly.com/REPLACE_ME/mock-interview'
 export const whatsappLink = (text: string) => `https://wa.me/91XXXXXXXXXX?text=${encodeURIComponent(text)}`
 export const WHATSAPP_URL = whatsappLink('Hi, I have a question about YPM')
 export const SUPPORT_EMAIL = 'support@yourproductmanager.in'
+// Crisp → Settings → Website Settings → Setup instructions. Chat stays off until this is set.
+export const CRISP_WEBSITE_ID = 'REPLACE_ME'
 
 /**
  * Same-site path to land on after login, else `fallback`. Resolving against a dummy origin catches
