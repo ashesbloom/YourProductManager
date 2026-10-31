@@ -1,7 +1,7 @@
 import { CALENDLY_URL } from './links'
 
 // Google Analytics 4 → Admin → Data streams → Web → Measurement ID. Empty = analytics off.
-export const GA_MEASUREMENT_ID = ''
+export const GA_MEASUREMENT_ID = 'G-EV8KVJ1LXB'
 
 type Gtag = (...args: unknown[]) => void
 const gtag: Gtag = (...args) => (window as unknown as { gtag?: Gtag }).gtag?.(...args)
@@ -19,7 +19,7 @@ export function pageView(path: string) {
 }
 
 export function initAnalytics() {
-  if (!GA_MEASUREMENT_ID) return
+  if (!GA_MEASUREMENT_ID || import.meta.env.DEV) return // local dev doesn't pollute the real reports
   const w = window as unknown as { dataLayer: unknown[]; gtag: Gtag }
   w.dataLayer = w.dataLayer || []
   // gtag.js only reads real `arguments` objects off the dataLayer, not arrays.
