@@ -7,11 +7,12 @@ import { BOOK, BOOK_PAGES, KINDLE_URL } from '@/data/book'
 const NAVY = '#0f2a5c'
 const NARROW = '(max-width: 639px)'
 
-// Faces in reading order: a title page (the inside of the cover), the sample pages, then a Kindle
-// page. Leaf 0 is the cover; leaf i (i ≥ 1) carries face 2i-1 on its front and face 2i on its back.
+// Faces in reading order: the sample pages (or a title page if there are none), then a Kindle page.
+// The sample pages come as spreads, so page 1 sits on the inside of the cover and each spread stays paired.
+// Leaf 0 is the cover; leaf i (i ≥ 1) carries face 2i-1 on its front and face 2i on its back.
 type Face = { node: ReactNode }
 const FACES: Face[] = [
-  { node: <TitlePage /> },
+  ...(BOOK_PAGES.length ? [] : [{ node: <TitlePage /> }]),
   ...BOOK_PAGES.map((src, i) => ({ node: <PageImage src={src} number={i + 1} /> })),
   { node: <KindlePage number={BOOK_PAGES.length + 1} /> },
 ]
@@ -61,9 +62,9 @@ function Folio({ number }: { number: number }) {
   return <span className="mt-auto pt-4 text-center text-[0.75em] text-black/40">{number}</span>
 }
 
-// A scanned page fills the paper; the gutter shadow from <Paper> still sits on top.
+// A scanned page sits whole on white paper; the gutter shadow from <Paper> still sits on top.
 function PageImage({ src, number }: { src: string; number: number }) {
-  return <img src={src} alt={`Sample page ${number}`} draggable={false} className="absolute inset-0 h-full w-full object-cover" />
+  return <img src={src} alt={`Sample page ${number}`} draggable={false} className="absolute inset-0 h-full w-full bg-white object-contain" />
 }
 
 function KindlePage({ number }: { number: number }) {
@@ -141,12 +142,14 @@ export function Book3D({ compact = false, className = '' }: { compact?: boolean;
     ((view.side !== 'right' && face === LEAVES[view.turned - 1].back) ||
       (view.side !== 'left' && view.turned < LEAVES.length && face === LEAVES[view.turned].front))
 
-  const pageNo = (face: number) => (face >= 1 ? face : null)
+  // Face 0 is page 1 when there are sample pages; otherwise it's the unnumbered title page.
+  const first = BOOK_PAGES.length ? 1 : 0
+  const pageNo = (face: number) => (face >= 0 && face + first >= 1 ? face + first : null)
   const shown = [
     view.side !== 'right' ? pageNo(LEAVES[view.turned - 1]?.back ?? -1) : null,
     view.side !== 'left' && view.turned < LEAVES.length ? pageNo(LEAVES[view.turned].front as number) : null,
   ].filter((n): n is number => n !== null && n > 0)
-  const total = FACES.length - 1
+  const total = FACES.length - 1 + first
 
   return (
     <div

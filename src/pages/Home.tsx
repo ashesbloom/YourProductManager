@@ -365,14 +365,7 @@ export default function Home() {
                 <a href={KINDLE_URL} target="_blank" rel="noopener noreferrer" className="btn-primary">
                   Read on Kindle <ArrowUpRight size={16} />
                 </a>
-                {/* Paperbacks aren't out yet: shown, but not clickable until the store links exist. */}
-                {['Buy on Amazon', 'Buy on Flipkart'].map((label) => (
-                  <span key={label} aria-disabled="true" title="Paperback coming soon" className="cursor-not-allowed rounded-full border border-purple-400/40 px-6 py-3 font-semibold text-white/50">
-                    {label}
-                  </span>
-                ))}
               </div>
-              <p className="mt-4 text-xs text-white/45">Paperback editions coming soon on Amazon & Flipkart.</p>
             </div>
           </div>
         </div>

@@ -27,7 +27,7 @@ const columns = [
 ]
 
 const socials = [
-  { href: 'https://www.linkedin.com/', label: 'LinkedIn', icon: Linkedin },
+  { href: 'https://www.linkedin.com/company/yourproductmanager/', label: 'LinkedIn', icon: Linkedin },
   { href: 'https://www.youtube.com/', label: 'YouTube', icon: Youtube },
 ]
 
