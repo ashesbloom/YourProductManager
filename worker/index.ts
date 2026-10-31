@@ -1,4 +1,5 @@
 import { googleCallback, googleStart, logout, me, sendOtp, verifyOtp } from './auth.ts'
+import { contact } from './email.ts'
 import { HttpError, json } from './http.ts'
 import { getProgress, media, saveProgress } from './media.ts'
 import { checkout, checkoutVerify, webhook } from './pay.ts'
@@ -32,6 +33,8 @@ export default {
           return await checkoutVerify(req, env, ctx)
         case 'POST /api/razorpay/webhook':
           return await webhook(req, env, ctx)
+        case 'POST /api/contact':
+          return await contact(req, env)
         case 'POST /api/progress':
           return await saveProgress(req, env)
       }

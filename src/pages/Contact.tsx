@@ -1,4 +1,6 @@
+import { useState } from 'react'
 import { motion } from 'framer-motion'
+import { api, ApiError } from '@/lib/api'
 import { ArrowUpRight, Calendar, Mail, MessageCircle, Send } from 'lucide-react'
 import { CALENDLY_URL, PHONE, SUPPORT_EMAIL, WHATSAPP_URL } from '@/lib/links'
 
@@ -36,6 +38,7 @@ const field =
 const label = 'mb-2 block text-sm font-semibold text-white/75'
 
 export default function Contact() {
+  const [status, setStatus] = useState('idle')
   return (
     <div className="bg-black text-white">
       {/* Hero */}
@@ -94,18 +97,22 @@ export default function Contact() {
           <div className="rounded-3xl bg-[#07070c] p-7 md:p-10">
             <h2 className="text-2xl md:text-3xl font-bold">Send a message</h2>
             <p className="mt-2 text-white/60">
-              Include your current role, target role, and what you want help with. This opens your email app
-              with the message ready to send.
+              Include your current role, target role, and what you want help with. We reply by email.
             </p>
 
             <form
               className="mt-8 grid sm:grid-cols-2 gap-x-4 gap-y-5"
-              onSubmit={(e) => {
+              onSubmit={async (e) => {
                 e.preventDefault()
-                const f = new FormData(e.currentTarget)
-                const subject = `[${f.get('topic')}] Enquiry from ${f.get('name')}`
-                const body = `${f.get('message')}\n\n— ${f.get('name')} (${f.get('email')})`
-                window.location.href = `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
+                const form = e.currentTarget
+                setStatus('sending')
+                try {
+                  await api('/api/contact', Object.fromEntries(new FormData(form)))
+                  form.reset()
+                  setStatus('sent')
+                } catch (err) {
+                  setStatus(err instanceof ApiError ? err.message : 'Could not send. Please email us directly.')
+                }
               }}
             >
               <div>
@@ -135,9 +142,20 @@ export default function Contact() {
                 />
               </div>
               <div className="sm:col-span-2">
-                <button type="submit" className="btn-primary h-12 justify-center px-8">
-                  <Send size={17} /> Send Message
+                {/* Honeypot: hidden from people, filled in by bots. */}
+                <input name="website" tabIndex={-1} autoComplete="off" aria-hidden="true" className="hidden" />
+                <button type="submit" disabled={status === 'sending'} className="btn-primary h-12 justify-center px-8 disabled:opacity-60">
+                  <Send size={17} /> {status === 'sending' ? 'Sending…' : 'Send message'}
                 </button>
+                {status === 'sent' ? (
+                  <p role="status" className="mt-4 text-sm font-semibold text-green-400">
+                    Message sent. We’ll reply to your email within 24–48 hours.
+                  </p>
+                ) : status !== 'idle' && status !== 'sending' ? (
+                  <p role="alert" className="mt-4 text-sm text-red-300">
+                    {status}
+                  </p>
+                ) : null}
                 <p className="mt-4 text-xs text-white/40">
                   Mock interviews are guidance-focused and don’t guarantee outcomes.
                 </p>
