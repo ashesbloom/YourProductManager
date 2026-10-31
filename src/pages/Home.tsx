@@ -6,7 +6,6 @@ import {
   MessageCircle, TrendingUp, UserCheck,
 } from 'lucide-react'
 import { LockedCertificate } from '../components/CertificateCard'
-import { ReelsSection } from '../components/sections/ReelsSection'
 import { Book3D } from '../components/Book3D'
 import { KINDLE_URL } from '../data/book'
 import { CourseOfferCard } from '../components/CourseOfferCard'
@@ -133,6 +132,26 @@ const faqs = [
   {
     q: 'How is 1:1 coaching different from the course?',
     a: 'The self-paced course provides structured foundational learning to help you understand Product Management concepts at your own pace. 1:1 coaching is more intensive and personalized, focusing on your specific challenges, goals, and growth areas. It involves direct feedback, strategic conversations, and deeper refinement tailored to your individual needs.',
+  },
+]
+
+// Learner reviews as YPM posted them on LinkedIn; each card opens its post. `pull` is a sentence from `quote`.
+const TESTIMONIALS = [
+  {
+    pull: 'Khushbu Sharma made the concepts very approachable.',
+    quote:
+      'Coming from a non-technical background, I initially felt that product management might be difficult for me. However, Khushbu Sharma made the concepts very approachable. Her teaching style focuses on understanding the fundamentals and building confidence step by step, which helped me see how my background could also fit into product roles.',
+    name: 'Anshika',
+    context: 'Fresher, non-tech background',
+    href: 'https://lnkd.in/p/gf3dgMD3',
+  },
+  {
+    pull: 'Her session helped me connect the dots between theory and real-world product thinking.',
+    quote:
+      'I had gone through many resources but still felt confused about how product management works in practice. Her session helped me connect the dots between theory and real-world product thinking. The clarity I gained made a big difference in how I approach product problems now.',
+    name: 'YPM learner',
+    context: '1:1 session',
+    href: 'https://lnkd.in/p/gMAeDafV',
   },
 ]
 
@@ -372,9 +391,56 @@ export default function Home() {
       </section>
 
       {/* ═══════════════ SUCCESS STORIES ═══════════════ */}
-      <div className="pt-16 md:pt-24">
-        <ReelsSection />
-      </div>
+      <section className="container pt-16 pb-16 md:pt-24 md:pb-24">
+        <h2 data-reveal className={h2}>Success stories</h2>
+        <p data-reveal className="mt-3 max-w-2xl text-white/60">In their own words: learners on what changed after working with YPM.</p>
+        <div className="mt-10 grid grid-cols-1 gap-6 md:grid-cols-2">
+          {TESTIMONIALS.map((t) => {
+            const [before, after] = t.quote.split(t.pull)
+            return (
+              <figure
+                data-reveal
+                key={t.href}
+                className="group relative flex flex-col overflow-hidden rounded-3xl border border-purple-400/25 bg-linear-to-br from-purple-950/60 via-[#0e0818] to-black p-7 shadow-[0_30px_80px_-45px_rgba(124,58,237,0.7)] transition-[border-color,translate] duration-300 hover:-translate-y-1 hover:border-purple-400/55 has-[a:focus-visible]:ring-2 has-[a:focus-visible]:ring-primary/70 md:p-9"
+              >
+                <div className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-brand/25 blur-3xl transition-opacity duration-300 md:opacity-60 md:group-hover:opacity-100" />
+                <span aria-hidden="true" className="relative h-10 font-['Playfair_Display'] text-7xl leading-none text-purple-400/70">
+                  “
+                </span>
+                <blockquote className="relative mt-4 flex-1">
+                  <p className="font-['Montserrat'] text-xl font-bold leading-snug text-white md:text-2xl">{t.pull}</p>
+                  <p className="mt-5 leading-relaxed text-white/55">
+                    “{before}
+                    <span className="text-white/85">{t.pull}</span>
+                    {after}”
+                  </p>
+                </blockquote>
+                <figcaption className="relative mt-8 flex items-center gap-4 border-t border-white/10 pt-6">
+                  <span aria-hidden="true" className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-purple-400/30 bg-purple-500/15 font-['Montserrat'] font-bold text-purple-200">
+                    {t.name.charAt(0)}
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block font-semibold text-white">{t.name}</span>
+                    <span className="block text-sm text-[#FBBF24]/85">{t.context}</span>
+                  </span>
+                  {/* The whole card is the link (stretched ::after); this label is its accessible name. */}
+                  <a
+                    href={t.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={`Read ${t.name}’s review on LinkedIn`}
+                    className="inline-flex shrink-0 items-center gap-1.5 text-sm font-semibold text-white/50 transition-colors after:absolute after:inset-[-100vmax] after:content-[''] group-hover:text-white focus-visible:outline-none focus-visible:text-white"
+                  >
+                    <Linkedin size={15} />
+                    <span className="hidden sm:inline">LinkedIn</span>
+                    <ArrowUpRight size={15} className="transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+                  </a>
+                </figcaption>
+              </figure>
+            )
+          })}
+        </div>
+      </section>
 
       {/* ═══════════════ CERTIFICATE ═══════════════ */}
       <section className="border-t border-white/10 py-16 md:py-24">
