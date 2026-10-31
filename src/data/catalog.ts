@@ -85,7 +85,7 @@ export const COURSES: Record<string, Course> = {
   },
   foundations: {
     id: 'foundations',
-    title: 'Product Management (Foundations)',
+    title: 'Product Management Foundations',
     modules: [
       {
         title: 'PM Basics',

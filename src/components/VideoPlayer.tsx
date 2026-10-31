@@ -11,6 +11,7 @@ export function VideoPlayer({
   track,
   watermark,
   onProgress,
+  onPlay,
 }: {
   lectureId: string
   durationS: number
@@ -18,6 +19,7 @@ export function VideoPlayer({
   track: boolean
   watermark?: string
   onProgress: (r: Result) => void
+  onPlay?: () => void
 }) {
   const ref = useRef<HTMLVideoElement>(null)
   const [error, setError] = useState('')
@@ -123,6 +125,7 @@ export function VideoPlayer({
         controlsList="nodownload"
         disablePictureInPicture
         onContextMenu={(e) => e.preventDefault()}
+        onPlay={onPlay}
       />
       {/* Deterrent against re-sharing screen recordings. ponytail: hidden in native fullscreen; a custom fullscreen container would keep it. */}
       {watermark ? (

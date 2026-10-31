@@ -6,6 +6,7 @@ import { COURSES, courseLectures, lookup } from '@/data/catalog'
 import { resumeLecture, useMe, useProgress, type Progress } from '@/lib/me'
 import { VideoPlayer } from '@/components/VideoPlayer'
 import { btnGhost, btnPrimary } from '@/components/ui'
+import { track } from '@/lib/analytics'
 
 function Panel({ children }: { children: ReactNode }) {
   return (
@@ -62,7 +63,7 @@ export default function Learn() {
               <Lock className="text-white/50" />
               <p className="max-w-sm text-white/70">This lecture is part of the full course.</p>
               <div className="flex flex-wrap justify-center gap-3">
-                <Link to={`/courses/${courseId}`} className={btnPrimary}>
+                <Link to={`/courses#${courseId}`} className={btnPrimary}>
                   Enroll to unlock
                 </Link>
                 {!me?.user ? (
@@ -85,6 +86,7 @@ export default function Learn() {
               track={!!me?.user}
               watermark={me?.user?.email}
               onProgress={onProgress}
+              onPlay={lecture.free ? () => track('free_lecture_play', { lecture_id: lecture.id }) : undefined}
             />
           )}
 

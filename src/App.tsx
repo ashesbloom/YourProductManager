@@ -1,5 +1,5 @@
 import { Suspense, lazy, useEffect, type ReactNode } from 'react'
-import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
+import { Routes, Route, Navigate, useLocation, useParams } from 'react-router-dom'
 import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
 import { useScrollReveal } from '@/hooks/useScrollReveal'
@@ -7,7 +7,6 @@ import { pageView } from '@/lib/analytics'
 
 const Home = lazy(() => import('@/pages/Home'))
 const Courses = lazy(() => import('@/pages/Courses'))
-const CourseContent = lazy(() => import('@/pages/CourseContent'))
 const Blog = lazy(() => import('@/pages/Blog'))
 const Resources = lazy(() => import('@/pages/Resources'))
 const Contact = lazy(() => import('@/pages/Contact'))
@@ -41,6 +40,12 @@ function RevealScope({ children }: { children: ReactNode }) {
   return <>{children}</>
 }
 
+// Both courses live on /courses now; old /courses/<id> links land on that course's column.
+function CourseRedirect() {
+  const { courseId } = useParams()
+  return <Navigate to={`/courses#${courseId}`} replace />
+}
+
 function RouteFallback() {
   return (
     <div className="flex min-h-[60vh] items-center justify-center">
@@ -59,7 +64,7 @@ function App() {
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/courses" element={<Courses />} />
-              <Route path="/courses/:courseId" element={<CourseContent />} />
+              <Route path="/courses/:courseId" element={<CourseRedirect />} />
               <Route path="/contact" element={<Contact />} />
               <Route path="/about" element={<About />} />
               <Route path="/privacy" element={<Privacy />} />
