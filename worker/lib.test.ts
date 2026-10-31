@@ -188,10 +188,11 @@ test('otp: at most 10 codes per email per 24h', async () => {
 
 test('users: first-touch utm kept; Google sub links to the same account', async () => {
   const db = testDb()
-  const id = await upsertUser(db, { email: 'a@b.co', utm: '{"utm_source":"meta"}' }, 1)
-  assert.equal(await upsertUser(db, { email: 'a@b.co', utm: '{"utm_source":"organic"}' }, 2), id)
-  assert.equal(await upsertUser(db, { email: 'a@b.co', googleSub: 'g-1', name: 'A' }, 3), id)
-  assert.equal(await upsertUser(db, { email: 'renamed@b.co', googleSub: 'g-1' }, 4), id) // Google email changed
+  const { id, created } = await upsertUser(db, { email: 'a@b.co', utm: '{"utm_source":"meta"}' }, 1)
+  assert.equal(created, true)
+  assert.deepEqual(await upsertUser(db, { email: 'a@b.co', utm: '{"utm_source":"organic"}' }, 2), { id, created: false })
+  assert.equal((await upsertUser(db, { email: 'a@b.co', googleSub: 'g-1', name: 'A' }, 3)).id, id)
+  assert.equal((await upsertUser(db, { email: 'renamed@b.co', googleSub: 'g-1' }, 4)).id, id) // Google email changed
   const row = (await db.prepare(`SELECT utm, name, google_sub FROM users WHERE id = ?`).bind(id).first()) as Record<string, unknown>
   assert.equal(row.utm, '{"utm_source":"meta"}')
   assert.equal(row.name, 'A')
@@ -200,7 +201,7 @@ test('users: first-touch utm kept; Google sub links to the same account', async 
 
 test('session: lookup, idle expiry, sliding refresh, max 3 per user', async () => {
   const db = testDb()
-  const uid = await upsertUser(db, { email: 'a@b.co' }, 0)
+  const { id: uid } = await upsertUser(db, { email: 'a@b.co' }, 0)
   const t1 = await createSession(db, uid, 0)
   assert.equal((await loadSession(db, t1, 1))?.userId, uid)
   assert.equal(await loadSession(db, t1, SESSION_IDLE_MS + 1), null) // idle too long
@@ -305,7 +306,7 @@ test('pay: admin grants survive refunds; buying again after a refund restores ac
 import { hasAccess, parseProgress, recordProgress } from './media.ts'
 test('media: access needs a live session and an unrevoked enrollment in that course', async () => {
   const db = testDb()
-  const uid = await upsertUser(db, { email: 'a@b.co' }, 0)
+  const { id: uid } = await upsertUser(db, { email: 'a@b.co' }, 0)
   const sid = await sha256Hex(await createSession(db, uid, 0))
   assert.equal(await hasAccess(db, sid, 'foundations', 1), false) // not enrolled
   await db.prepare(`INSERT INTO enrollments(user_id, course_id, source, granted_at) VALUES(?, 'foundations', 'admin', 0)`).bind(uid).run()
@@ -331,7 +332,7 @@ test('progress: rejects lectures without video and malformed bitmaps; clamps pos
 
 test('progress: completes once at 85% across sessions; seeking adds nothing; resume follows the latest beat', async () => {
   const db = testDb()
-  const uid = await upsertUser(db, { email: 'a@b.co' }, 0)
+  const { id: uid } = await upsertUser(db, { email: 'a@b.co' }, 0)
   const lec = { id: 'foundations-01', durationS: 100 }
   assert.deepEqual(await recordProgress(db, uid, lec, 50, fromRanges([[0, 50]], 100), 1), { pct: 50, completed: false })
   assert.deepEqual(await recordProgress(db, uid, lec, 95, fromRanges([[0, 5], [95, 100]], 100), 2), { pct: 50, completed: false })

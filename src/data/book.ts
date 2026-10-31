@@ -1,39 +1,15 @@
-export const KINDLE_URL = 'https://www.amazon.in/dp/B0HD2NGVQK'
+export const KINDLE_URL = 'https://amzn.in/d/08pIvt3V'
 
 export const BOOK = {
   title: 'Building AI Products That Work',
   subtitle: 'The practical operating system for founders, PMs and engineers',
 }
 
-export type BookPage = { heading?: string; body: string[]; quote?: boolean }
-
-// Sample pages, in reading order. Currently built from the back-cover copy; swap in real pages
-// from the manuscript here. A closing "keep reading on Kindle" page is added after the last one.
-export const BOOK_PAGES: BookPage[] = [
-  {
-    quote: true,
-    body: [
-      'You don’t build reliable AI by chasing accuracy.',
-      'You build it by designing for failure.',
-    ],
-  },
-  {
-    heading: 'Who it is for',
-    body: [
-      'Whether you are a founder validating your first AI use case, a product manager writing your first AI feature spec, or an engineer trying to understand why the model keeps getting it wrong in production — this book gives you the framework, the tools, and the Monday Morning Checklist to apply it tomorrow.',
-    ],
-  },
-  {
-    heading: 'What makes this different',
-    body: [
-      'Unlike most AI books focused on theory, this book focuses on real product decisions — what to build, what to avoid, and how to make AI useful in practice.',
-    ],
-  },
-  {
-    heading: 'About the author',
-    body: [
-      'Khushbu Sharma has worked across startups and digital products, focusing on building practical, scalable systems.',
-      'Her work centers on bridging the gap between AI capability and real-world product execution, helping teams turn AI ideas into working products.',
-    ],
-  },
-]
+// TODO(book pages): Khushbu's sample pages (sent on WhatsApp) aren't in the repo yet. Drop the page
+// images into src/assets/book-pages/, named in reading order (01.jpg, 02.jpg, …), and the "Look inside"
+// flip-book shows them. Until then it shows only the title page and a "keep reading on Kindle" page.
+export const BOOK_PAGES: string[] = Object.entries(
+  import.meta.glob<string>('../assets/book-pages/*.{jpg,jpeg,png,webp,avif}', { eager: true, import: 'default' }),
+)
+  .sort(([a], [b]) => a.localeCompare(b, undefined, { numeric: true }))
+  .map(([, src]) => src)

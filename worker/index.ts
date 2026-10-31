@@ -17,11 +17,11 @@ export default {
         case 'POST /api/auth/otp':
           return await sendOtp(req, env)
         case 'POST /api/auth/verify':
-          return await verifyOtp(req, env)
+          return await verifyOtp(req, env, ctx)
         case 'GET /api/auth/google':
           return googleStart(req, env)
         case 'GET /api/auth/google/callback':
-          return await googleCallback(req, env)
+          return await googleCallback(req, env, ctx)
         case 'POST /api/auth/logout':
           return await logout(req, env)
         case 'GET /api/me':

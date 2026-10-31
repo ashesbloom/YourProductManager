@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { ArrowUpRight, ChevronLeft, ChevronRight } from 'lucide-react'
 import cover from '@/assets/book-cover.avif'
-import { BOOK, BOOK_PAGES, KINDLE_URL, type BookPage } from '@/data/book'
+import { BOOK, BOOK_PAGES, KINDLE_URL } from '@/data/book'
 
 const NAVY = '#0f2a5c'
 const NARROW = '(max-width: 639px)'
@@ -12,7 +12,7 @@ const NARROW = '(max-width: 639px)'
 type Face = { node: ReactNode }
 const FACES: Face[] = [
   { node: <TitlePage /> },
-  ...BOOK_PAGES.map((p, i) => ({ node: <PageBody page={p} number={i + 1} /> })),
+  ...BOOK_PAGES.map((src, i) => ({ node: <PageImage src={src} number={i + 1} /> })),
   { node: <KindlePage number={BOOK_PAGES.length + 1} /> },
 ]
 const LEAVES = Array.from({ length: 1 + Math.ceil((FACES.length - 1) / 2) }, (_, i) =>
@@ -61,28 +61,9 @@ function Folio({ number }: { number: number }) {
   return <span className="mt-auto pt-4 text-center text-[0.75em] text-black/40">{number}</span>
 }
 
-function PageBody({ page, number }: { page: BookPage; number: number }) {
-  return (
-    <>
-      {page.quote ? (
-        <blockquote className="my-auto font-['Playfair_Display'] text-[1.35em] italic leading-snug">
-          {page.body.map((line) => (
-            <p key={line} className="mt-3 first:mt-0">{line}</p>
-          ))}
-        </blockquote>
-      ) : (
-        <>
-          {page.heading && (
-            <h4 className="font-['Playfair_Display'] text-[1.3em] font-bold leading-tight">{page.heading}</h4>
-          )}
-          {page.body.map((para) => (
-            <p key={para} className="mt-[1em] leading-[1.65]">{para}</p>
-          ))}
-        </>
-      )}
-      <Folio number={number} />
-    </>
-  )
+// A scanned page fills the paper; the gutter shadow from <Paper> still sits on top.
+function PageImage({ src, number }: { src: string; number: number }) {
+  return <img src={src} alt={`Sample page ${number}`} draggable={false} className="absolute inset-0 h-full w-full object-cover" />
 }
 
 function KindlePage({ number }: { number: number }) {
@@ -172,7 +153,7 @@ export function Book3D({ compact = false, className = '' }: { compact?: boolean;
       className={`${
         compact
           ? '[--w:150px]'
-          : '[--w:min(78vw,300px)] sm:[--w:280px] lg:[--w:min(300px,calc((100vw-2*var(--gutter)-4rem)*7/24))]'
+          : '[--w:min(78vw,300px)] sm:[--w:280px] lg:[--w:min(260px,calc((100vw-2*var(--gutter)-10rem)/4))]'
       } [--h:calc(var(--w)*1.56)] [--t:calc(var(--w)*0.1)] ${className}`}
     >
       <div

@@ -123,6 +123,17 @@ export const PRODUCTS: Record<string, Product> = {
   },
 }
 
+/** What the AI Product Management purchase includes. Shown on the home course card and the courses page. */
+export const COURSE_INCLUDED: Array<{ strong?: string; text: string }> = [
+  { strong: '3 AI product', text: 'case study assignments' },
+  { strong: '2-hour free', text: 'mock interview session' },
+  { text: 'Personal dashboard for each user' },
+  { text: 'Resume review by a mentor' },
+  { text: 'Personalised mentoring if needed' },
+  { text: 'Certificate after course completion' },
+  { text: 'First AI PM lecture free to preview' },
+]
+
 export const LECTURES: Record<string, Lecture & { courseId: string }> = Object.fromEntries(
   Object.values(COURSES).flatMap((c) =>
     c.modules.flatMap((m) => m.lectures.map((l) => [l.id, { ...l, courseId: c.id }] as const)),

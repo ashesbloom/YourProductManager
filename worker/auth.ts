@@ -1,4 +1,5 @@
 import { sendEmail } from './email.ts'
+import { SUPPORT_EMAIL } from '../src/lib/links.ts'
 import {
   clearSessionCookie,
   getCookie,
@@ -67,21 +68,40 @@ export async function upsertUser(
   db: D1Database,
   u: { email: string; name?: string | null; googleSub?: string | null; utm?: string | null },
   now: number,
-): Promise<number> {
+): Promise<{ id: number; created: boolean }> {
   if (u.googleSub) {
     const bySub = await db.prepare(`SELECT id FROM users WHERE google_sub = ?`).bind(u.googleSub).first<{ id: number }>()
-    if (bySub) return bySub.id
+    if (bySub) return { id: bySub.id, created: false }
   }
   const row = await db
     .prepare(
       `INSERT INTO users(email, name, google_sub, utm, created_at, last_seen_at) VALUES(?, ?, ?, ?, ?, ?)
        ON CONFLICT(email) DO UPDATE SET name = COALESCE(users.name, excluded.name),
          google_sub = COALESCE(users.google_sub, excluded.google_sub), last_seen_at = excluded.last_seen_at
-       RETURNING id`,
+       RETURNING id, created_at`,
     )
     .bind(u.email, u.name ?? null, u.googleSub ?? null, u.utm ?? null, now, now)
-    .first<{ id: number }>()
-  return row!.id
+    .first<{ id: number; created_at: number }>()
+  return { id: row!.id, created: row!.created_at === now }
+}
+
+// Readable by the page (not HttpOnly) so it can report the signup to analytics, then clear it.
+const SIGNUP_COOKIE = 'ypm_signup=1; Path=/; Secure; SameSite=Lax; Max-Age=300'
+
+/** First login of a new account: log it and send the welcome email in the background. */
+function welcome(env: Env, ctx: ExecutionContext, userId: number, email: string, origin: string, now: number) {
+  ctx.waitUntil(
+    Promise.all([
+      env.DB.prepare(`INSERT INTO events(user_id, type, data, at) VALUES(?, 'signup', NULL, ?)`).bind(userId, now).run(),
+      sendEmail(
+        env,
+        email,
+        'Welcome to Your Product Manager',
+        `Your YPM account is ready.\n\nWatch the first AI Product Management lecture free: ${origin}/courses\n` +
+          `Your dashboard: ${origin}/dashboard\n\nQuestions? Write to ${SUPPORT_EMAIL}.\n\nKhushbu Sharma, YPM`,
+      ),
+    ]).catch((err) => console.error(JSON.stringify({ msg: 'welcome failed', userId, err: String(err) }))),
+  )
 }
 
 /** Returns the raw token for the cookie; only its hash is stored. */
@@ -131,16 +151,20 @@ export async function sendOtp(req: Request, env: Env): Promise<Response> {
   return json({ ok: true })
 }
 
-export async function verifyOtp(req: Request, env: Env): Promise<Response> {
+export async function verifyOtp(req: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
   const body = await readJson(req)
   const email = normEmail(body.email)
   const code = typeof body.code === 'string' ? body.code.trim() : ''
   if (!email || !/^\d{6}$/.test(code)) throw new HttpError(400, 'Enter the 6-digit code from the email')
   const now = Date.now()
   if (!(await checkOtp(env.DB, email, code, now))) throw new HttpError(400, 'That code is wrong or has expired')
-  const userId = await upsertUser(env.DB, { email, utm: utmString(body.utm) }, now)
-  const token = await createSession(env.DB, userId, now)
-  return json({ ok: true }, 200, { 'set-cookie': sessionCookie(token) })
+  const { id: userId, created } = await upsertUser(env.DB, { email, utm: utmString(body.utm) }, now)
+  const headers = new Headers({ 'set-cookie': sessionCookie(await createSession(env.DB, userId, now)) })
+  if (created) {
+    welcome(env, ctx, userId, email, new URL(req.url).origin, now)
+    headers.append('set-cookie', SIGNUP_COOKIE)
+  }
+  return json({ ok: true }, 200, headers)
 }
 
 const GOOGLE_COOKIE = 'ypm_g'
@@ -167,7 +191,7 @@ export function googleStart(req: Request, env: Env): Response {
   )
 }
 
-export async function googleCallback(req: Request, env: Env): Promise<Response> {
+export async function googleCallback(req: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
   const url = new URL(req.url)
   const fail = () => redirect('/login?error=google')
   let saved: { state?: string; next?: string; utm?: string | null }
@@ -206,13 +230,18 @@ export async function googleCallback(req: Request, env: Env): Promise<Response> 
   if (claims.aud !== env.GOOGLE_CLIENT_ID || !claims.email_verified) return fail()
 
   const now = Date.now()
-  const userId = await upsertUser(
+  const email = claims.email.toLowerCase()
+  const { id: userId, created } = await upsertUser(
     env.DB,
-    { email: claims.email.toLowerCase(), name: claims.name ?? null, googleSub: claims.sub, utm: saved.utm ?? null },
+    { email, name: claims.name ?? null, googleSub: claims.sub, utm: saved.utm ?? null },
     now,
   )
   const headers = new Headers()
   headers.append('set-cookie', sessionCookie(await createSession(env.DB, userId, now)))
+  if (created) {
+    welcome(env, ctx, userId, email, url.origin, now)
+    headers.append('set-cookie', SIGNUP_COOKIE)
+  }
   headers.append('set-cookie', `${GOOGLE_COOKIE}=; Path=/api/auth/google; HttpOnly; Secure; SameSite=Lax; Max-Age=0`)
   return redirect(safeNext(saved.next), headers)
 }

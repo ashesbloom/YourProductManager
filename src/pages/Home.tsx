@@ -8,7 +8,8 @@ import {
 import { LockedCertificate } from '../components/CertificateCard'
 import { ReelsSection } from '../components/sections/ReelsSection'
 import { Book3D } from '../components/Book3D'
-import { BOOK, KINDLE_URL } from '../data/book'
+import { KINDLE_URL } from '../data/book'
+import { CourseOfferCard } from '../components/CourseOfferCard'
 import { CALENDLY_URL, whatsappLink } from '../lib/links'
 import { track } from '../lib/analytics'
 import { PRODUCTS, formatINR } from '../data/catalog'
@@ -105,6 +106,12 @@ const CERTIFICATE_CRITERIA = [
   'Complete all lectures in the Product Management Programme',
   'Successfully complete the 1:1 Coaching Programme',
 ]
+
+const BOOK_HIGHLIGHTS = [
+  ['Practical Product Thinking', 'From ideas and decisions to building useful AI products.'],
+  ['Practical Frameworks', 'Practical ways to approach AI product decisions.'],
+  ['For Founders, PMs & Engineers', 'Designed for people building and managing AI products.'],
+] as const
 
 const faqs = [
   {
@@ -222,6 +229,14 @@ export default function Home() {
         </div>
       </section>
 
+      {/* ═══════════════ COURSES ═══════════════ */}
+      <section id="courses" className="container scroll-mt-[var(--header-h)] pt-16 md:pt-24">
+        <h2 data-reveal className={h2}>Courses</h2>
+        <div data-reveal className="mt-10">
+          <CourseOfferCard />
+        </div>
+      </section>
+
       {/* ═══════════════ THREE WAYS TO LEARN ═══════════════ */}
       <section className="container py-16 md:py-24">
         <h2 data-reveal className={h2}>Three ways to learn</h2>
@@ -299,36 +314,67 @@ export default function Home() {
       {/* ═══════════════ WHY YPM ═══════════════ */}
       <section className="container pb-16 md:pb-24">
         <h2 data-reveal className={h2}>Why YPM</h2>
-        <ul className="mt-10 grid grid-cols-2 border-l border-t border-white/10 md:grid-cols-3">
+        <ul className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
           {WHY.map(({ icon: Icon, title, body }) => (
-            <li data-reveal key={title} className="border-b border-r border-white/10 p-5 sm:p-7 md:p-8">
-              <Icon size={22} className="text-primary" />
-              <h3 className="mt-5 font-semibold text-white">{title}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-white/55">{body}</p>
+            <li
+              data-reveal
+              key={title}
+              className="group relative overflow-hidden rounded-2xl border border-purple-400/30 bg-linear-to-br from-purple-950/70 via-[#140a26] to-black p-6 shadow-lg shadow-purple-950/40 transition-colors hover:border-purple-400/60 sm:p-7"
+            >
+              <div className="pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full bg-brand/30 blur-3xl transition-opacity group-hover:opacity-100 md:opacity-70" />
+              <span className="relative flex h-11 w-11 items-center justify-center rounded-xl border border-purple-400/30 bg-purple-500/15">
+                <Icon size={21} className="text-purple-200" />
+              </span>
+              <h3 className="relative mt-5 font-['Montserrat'] text-lg font-bold text-white">{title}</h3>
+              <p className="relative mt-2 text-sm leading-relaxed text-white/70">{body}</p>
             </li>
           ))}
         </ul>
       </section>
 
       {/* ═══════════════ THE BOOK ═══════════════ */}
-      <section id="book" className="scroll-mt-[var(--header-h)] border-y border-white/10 bg-[#07070c] py-16 md:py-24">
-        <div className="container grid items-center gap-x-16 gap-y-14 lg:grid-cols-[5fr_7fr]">
-          <div data-reveal>
-            <h2 className={`${h2} text-balance`}>{BOOK.title}</h2>
-            <p className="mt-5 max-w-md leading-relaxed text-white/60">
-              Shipping AI that holds up in production. For founders, product managers and engineers.
-            </p>
-            <p className="mt-6 text-white/55">
-              By{' '}
-              <Link to="/about" className="font-semibold text-white underline-offset-4 hover:underline">
-                Khushbu Sharma
-              </Link>
-            </p>
-            <a href={KINDLE_URL} target="_blank" rel="noreferrer" className="btn-primary mt-10">
-              Read on Kindle
-            </a>
+      {/* Khushbu's portfolio book card, in the site's fonts. The 3D book opens into the sample pages. */}
+      <section id="book" className="container scroll-mt-[var(--header-h)] pb-16 md:pb-24">
+        <div className="rounded-3xl border border-purple-400/30 bg-linear-to-br from-black via-purple-950/40 to-black p-6 shadow-2xl md:p-10">
+          <div className="grid grid-cols-1 items-center gap-x-14 gap-y-12 lg:grid-cols-2">
+            <Book3D className="py-6" />
+            <div data-reveal>
+              <h2 className="mb-4 font-['Montserrat'] text-4xl font-bold leading-tight text-white lg:text-5xl">
+                Building AI Products That <span className="text-purple-300">Work</span>
+              </h2>
+              <p className="mb-6 text-lg text-white/65">The Practical Operating System for Founders, PMs, and Engineers</p>
+              <p className="mb-7 leading-relaxed text-white/60">
+                A practical guide to building AI products that work in the real world. The book brings together product
+                thinking, practical frameworks, real-world considerations, and lessons for founders, product managers, and
+                engineers building AI products.
+              </p>
+              <ul className="mb-8 space-y-4">
+                {BOOK_HIGHLIGHTS.map(([title, body]) => (
+                  <li key={title} className="flex items-start gap-4">
+                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-purple-400/30 bg-purple-500/15 text-purple-300">
+                      ✦
+                    </span>
+                    <div>
+                      <h3 className="font-semibold text-white">{title}</h3>
+                      <p className="text-sm text-white/55">{body}</p>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+              <div className="flex flex-wrap gap-3">
+                <a href={KINDLE_URL} target="_blank" rel="noopener noreferrer" className="btn-primary">
+                  Read on Kindle <ArrowUpRight size={16} />
+                </a>
+                {/* Paperbacks aren't out yet: shown, but not clickable until the store links exist. */}
+                {['Buy on Amazon', 'Buy on Flipkart'].map((label) => (
+                  <span key={label} aria-disabled="true" title="Paperback coming soon" className="cursor-not-allowed rounded-full border border-purple-400/40 px-6 py-3 font-semibold text-white/50">
+                    {label}
+                  </span>
+                ))}
+              </div>
+              <p className="mt-4 text-xs text-white/45">Paperback editions coming soon on Amazon & Flipkart.</p>
+            </div>
           </div>
-          <Book3D />
         </div>
       </section>
 

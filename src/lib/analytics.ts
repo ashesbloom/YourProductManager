@@ -9,7 +9,14 @@ const gtag: Gtag = (...args) => (window as unknown as { gtag?: Gtag }).gtag?.(..
 export const track = (event: string, params?: Record<string, unknown>) => gtag('event', event, params)
 
 /** The SPA never reloads, so App sends each route change as a page view. */
-export const pageView = (path: string) => track('page_view', { page_path: path, page_location: location.href, page_title: document.title })
+export function pageView(path: string) {
+  track('page_view', { page_path: path, page_location: location.href, page_title: document.title })
+  // Set by the Worker on an account's first login (email code or Google), which always ends in a navigation.
+  if (document.cookie.includes('ypm_signup=1')) {
+    track('signup')
+    document.cookie = 'ypm_signup=; Path=/; Max-Age=0'
+  }
+}
 
 export function initAnalytics() {
   if (!GA_MEASUREMENT_ID) return
