@@ -12,6 +12,7 @@ import {
   SESSION_IDLE_MS,
   sessionCookie,
 } from './http.ts'
+import { certificateFor } from './student.ts'
 import { isEmail, randomCode, randomToken, safeNext, sha256Hex } from './lib.ts'
 
 const MIN = 60_000
@@ -259,5 +260,13 @@ export async function me(req: Request, env: Env): Promise<Response> {
   const { results } = await env.DB.prepare(`SELECT course_id FROM enrollments WHERE user_id = ? AND revoked_at IS NULL`)
     .bind(session.userId)
     .all<{ course_id: string }>()
-  return json({ user: { email: session.email, name: session.name }, enrollments: results.map((r) => r.course_id) })
+  const [cert, admin] = await Promise.all([
+    certificateFor(env.DB, session.userId),
+    env.DB.prepare(`SELECT is_admin FROM users WHERE id = ?`).bind(session.userId).first<{ is_admin: number }>(),
+  ])
+  return json({
+    user: { email: session.email, name: session.name, isAdmin: !!admin?.is_admin },
+    enrollments: results.map((r) => r.course_id),
+    certificate: cert && { id: cert.id, completedAt: cert.completedAt },
+  })
 }

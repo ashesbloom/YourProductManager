@@ -35,7 +35,7 @@ test('catalog: AI PM lists all 50 lectures', () => {
   assert.equal(courseLectures('ai-product').length, 50)
 })
 import { createHmac } from 'node:crypto'
-import { readFileSync } from 'node:fs'
+import { readdirSync, readFileSync } from 'node:fs'
 import { DatabaseSync } from 'node:sqlite'
 import { hmacVerify, isEmail, mediaKey, randomCode, randomToken, safeNext, sha256Hex } from './lib.ts'
 import { bucketCount, countHex, fromRanges, isHexBitmap, orHex } from '../src/lib/bitmap.ts'
@@ -43,7 +43,8 @@ import { bucketCount, countHex, fromRanges, isHexBitmap, orHex } from '../src/li
 function testDb(): D1Database {
   const db = new DatabaseSync(':memory:')
   db.exec('PRAGMA foreign_keys = ON;')
-  db.exec(readFileSync(new URL('../migrations/0001_init.sql', import.meta.url), 'utf8'))
+  const dir = new URL('../migrations/', import.meta.url)
+  for (const f of readdirSync(dir).sort()) db.exec(readFileSync(new URL(f, dir), 'utf8'))
   const stmt = (sql: string, args: unknown[] = []) => ({
     bind: (...a: unknown[]) => stmt(sql, a),
     first: async () => db.prepare(sql).get(...(args as never[])) ?? null,
@@ -365,4 +366,47 @@ test('pay: a failure while revoking leaves the refund retryable', async () => {
   assert.deepEqual(await active(db), [])
   const { n } = (await db.prepare(`SELECT COUNT(*) AS n FROM events WHERE type = 'refund'`).first()) as { n: number }
   assert.equal(n, 1)
+})
+
+import { adminStats, certificateFor, PROGRAMME_SIZE } from './student.ts'
+test('certificate: all AI PM lectures while enrolled, OR 1:1 coaching marked complete', async () => {
+  const db = testDb()
+  const { id: uid } = await upsertUser(db, { email: 'a@b.co', name: 'Asha' }, 0)
+  const complete = (n: number, at: number) =>
+    db.prepare(`INSERT INTO progress(user_id, lecture_id, position_s, watched, pct, completed_at, updated_at) VALUES(?, ?, 0, '', 100, ?, ?)`)
+      .bind(uid, `ai-product-${String(n).padStart(2, '0')}`, at, at).run()
+  for (let n = 1; n < PROGRAMME_SIZE; n++) await complete(n, n)
+  await seedOrder(db, 'order_A', 'ai-product', uid)
+  await fulfill(db, 'order_A', 'pay_A', 1)
+  assert.equal(await certificateFor(db, uid), null) // one lecture short
+  await complete(PROGRAMME_SIZE, 500)
+  assert.deepEqual(await certificateFor(db, uid), { id: 'YPM' + String(uid).padStart(7, '0'), name: 'Asha', completedAt: 500 })
+  await refund(db, 'pay_A', 600)
+  assert.equal(await certificateFor(db, uid), null) // refunded: the course route no longer counts
+  await db.prepare(`UPDATE users SET coaching_completed_at = 700 WHERE id = ?`).bind(uid).run()
+  assert.equal((await certificateFor(db, uid))?.completedAt, 700) // coaching alone earns it
+  const stats = await adminStats(db, 1000)
+  assert.equal(stats.totalStudents, 0) // refunded students aren't counted
+})
+
+test('admin stats: students, progress, completion and the 30-day series', async () => {
+  const db = testDb()
+  const now = 40 * DAY
+  await seedOrder(db, 'order_A', 'ai-product', 1)
+  await fulfill(db, 'order_A', 'pay_A', now - DAY)
+  await seedOrder(db, 'order_B', 'ai-product', 2)
+  await fulfill(db, 'order_B', 'pay_B', now - DAY)
+  for (let n = 1; n <= PROGRAMME_SIZE; n++) {
+    await db.prepare(`INSERT INTO progress(user_id, lecture_id, position_s, watched, pct, completed_at, updated_at) VALUES(1, ?, 0, '', 100, ?, ?)`)
+      .bind(`ai-product-${String(n).padStart(2, '0')}`, now - 2 * DAY, now - 2 * DAY).run()
+  }
+  const s = await adminStats(db, now)
+  assert.equal(s.totalStudents, 2)
+  assert.equal(s.newStudents, 2)
+  assert.equal(s.activeStudents, 1) // only user 1 watched in the last 7 days
+  assert.equal(s.completionRate, 50)
+  assert.equal(s.averageProgress, 50)
+  assert.equal(s.revenue.orders, 2)
+  assert.equal(s.daily.length, 30)
+  assert.equal(s.daily.reduce((n, d) => n + d.enrollments, 0), 2)
 })

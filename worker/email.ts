@@ -20,6 +20,7 @@ export async function sendEmail(env: Env, to: string, subject: string, text: str
   }
 }
 
+const CONTACT_PER_HOUR = 20
 const CONTACT_TOPICS = ['Courses', '1:1 Coaching', 'Mock Interview', 'Other']
 
 /** Contact form → the support inbox, with Reply-To set to the sender. */
@@ -33,7 +34,12 @@ export async function contact(req: Request, env: Env): Promise<Response> {
   const message = str(body.message, 5000)
   const topic = CONTACT_TOPICS.includes(body.topic as string) ? (body.topic as string) : 'Other'
   if (!name || !isEmail(email) || message.length < 5) throw new HttpError(400, 'Please fill in your name, a valid email and a message.')
-  // ponytail: honeypot only; add Turnstile (as on login) if the inbox starts getting spam.
+  // Resend's quota is shared with login codes, so a hard global cap keeps a flood from breaking login.
+  // ponytail: global cap + honeypot; add Turnstile (as on login) if real spam starts hitting the cap.
+  const now = Date.now()
+  const recent = await env.DB.prepare(`SELECT COUNT(*) AS n FROM events WHERE type = 'contact' AND at > ?`).bind(now - 3_600_000).first<{ n: number }>()
+  if ((recent?.n ?? 0) >= CONTACT_PER_HOUR) throw new HttpError(429, `Too many messages right now. Please email ${SUPPORT_EMAIL} directly.`)
+  await env.DB.prepare(`INSERT INTO events(user_id, type, data, at) VALUES(NULL, 'contact', ?, ?)`).bind(JSON.stringify({ topic }), now).run()
   await sendEmail(env, SUPPORT_EMAIL, `[${topic}] Enquiry from ${name}`, `${message}\n\n— ${name} <${email}>`, email)
   return json({ ok: true })
 }
