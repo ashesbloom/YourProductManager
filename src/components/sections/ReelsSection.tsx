@@ -2,45 +2,15 @@ import { useEffect, useRef, useState } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
 import { ChevronLeft, ChevronRight, Play, Volume2, VolumeX } from 'lucide-react'
 
-type ReelPerson = { name: string; from: string; to: string; duration: string }
+import student01 from '@/assets/success-stories/student-01.mp4'
+
+// The caption shows only once a name is filled in.
+type ReelPerson = Partial<{ name: string; from: string; to: string; duration: string }>
 type Reel = ReelPerson &
   ({ kind: 'youtube'; id: string } | { kind: 'file'; src: string })
 
-// Placeholder alumni data — swap in the real reels and transformations, no code changes needed.
-const REELS: Reel[] = [
-  {
-    kind: 'file',
-    src: '/Untitled video.mp4',
-    name: 'Arjun S.',
-    from: 'Software Engineer',
-    to: 'AI PM · Series B',
-    duration: '4 months',
-  },
-  {
-    kind: 'youtube',
-    id: 'REPLACE_WITH_SHORTS_ID_1',
-    name: 'Meera P.',
-    from: 'Business Analyst',
-    to: 'Product Manager · Swiggy',
-    duration: '6 months',
-  },
-  {
-    kind: 'youtube',
-    id: 'REPLACE_WITH_SHORTS_ID_2',
-    name: 'Karthik R.',
-    from: 'Associate PM',
-    to: 'Senior PM · Razorpay',
-    duration: '5 months',
-  },
-  {
-    kind: 'youtube',
-    id: 'REPLACE_WITH_SHORTS_ID_3',
-    name: 'Neha G.',
-    from: 'Senior PM',
-    to: 'Group PM · Flipkart',
-    duration: '7 months',
-  },
-]
+// Real student videos. TODO(testimonials): add each student's name, before/after role and duration.
+const REELS: Reel[] = [{ kind: 'file', src: student01 }]
 
 const N = REELS.length
 // How many cards fan out on each side. Caps at 2, and never enough to make one
@@ -73,13 +43,15 @@ function placement(offset: number) {
 function Placeholder({ reel }: { reel: Reel }) {
   return (
     <div className="flex h-full w-full flex-col items-center justify-center gap-5 px-6 text-center">
-      <span className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-2xl font-bold text-primary shadow-[0_0_30px_-6px_rgba(168,85,247,0.8)]">
-        {reel.name.charAt(0)}
-      </span>
+      {reel.name && (
+        <span className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-2xl font-bold text-primary shadow-[0_0_30px_-6px_rgba(168,85,247,0.8)]">
+          {reel.name.charAt(0)}
+        </span>
+      )}
       <span className="flex h-12 w-12 items-center justify-center rounded-full bg-white/5 ring-1 ring-white/15">
         <Play size={18} className="ml-0.5 text-white/80" fill="currentColor" strokeWidth={0} />
       </span>
-      <div className="hidden sm:block">
+      <div className={reel.name ? 'hidden sm:block' : 'hidden'}>
         <div className="font-['Montserrat'] text-base font-black uppercase tracking-wide text-white/90">
           {reel.name}
         </div>
@@ -196,7 +168,7 @@ export function ReelsSection() {
                       frameRefs.current[i] = el
                     }}
                     src={`https://www.youtube.com/embed/${reel.id}?autoplay=1&mute=1&loop=1&playlist=${reel.id}&playsinline=1&enablejsapi=1&rel=0`}
-                    title={`${reel.name} — testimonial`}
+                    title={`${reel.name ?? 'Student'} testimonial`}
                     className="h-full w-full"
                     allow="autoplay; encrypted-media; picture-in-picture"
                     allowFullScreen
@@ -223,7 +195,7 @@ export function ReelsSection() {
                   </button>
                 )}
 
-                {isActive && (
+                {isActive && reel.name && (
                   <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-linear-to-t from-black via-black/88 to-transparent px-5 pb-5 pt-20">
                     <div className="font-['Montserrat'] text-lg font-black uppercase tracking-wide text-white">
                       {reel.name}
@@ -244,6 +216,8 @@ export function ReelsSection() {
           })}
         </motion.div>
 
+        {N > 1 && (
+          <>
         <button
           type="button"
           onClick={() => go(-1)}
@@ -260,15 +234,18 @@ export function ReelsSection() {
         >
           <ChevronRight size={22} />
         </button>
+          </>
+        )}
       </div>
 
+      {N > 1 && (
       <div className="mt-10 flex items-center justify-center gap-3">
         {REELS.map((reel, i) => (
           <button
             key={reel.kind === 'file' ? reel.src : reel.id}
             type="button"
             onClick={() => setActive(i)}
-            aria-label={`Show ${reel.name}'s testimonial`}
+            aria-label={`Show testimonial ${i + 1}`}
             aria-current={i === active}
             className={`h-2 rounded-full transition-all duration-300 ${
               i === active ? 'w-8 bg-primary' : 'w-2 bg-white/20 hover:bg-white/40'
@@ -276,6 +253,7 @@ export function ReelsSection() {
           />
         ))}
       </div>
+      )}
     </section>
   )
 }
