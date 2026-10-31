@@ -36,7 +36,7 @@ const linkClass = 'text-sm text-white/65 transition-colors hover:text-white'
 
 export function Footer() {
   return (
-    <footer className="border-t border-white/10 bg-background">
+    <footer className="border-t border-white/10 bg-background print:hidden">
       <div className="container py-14">
         <div className="grid grid-cols-2 gap-x-6 gap-y-10 md:grid-cols-[1.3fr_1fr_1fr_1.3fr]">
           <div className="col-span-2 md:col-span-1">

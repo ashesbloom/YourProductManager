@@ -380,7 +380,10 @@ test('certificate: all AI PM lectures while enrolled, OR 1:1 coaching marked com
   await fulfill(db, 'order_A', 'pay_A', 1)
   assert.equal(await certificateFor(db, uid), null) // one lecture short
   await complete(PROGRAMME_SIZE, 500)
-  assert.deepEqual(await certificateFor(db, uid), { id: 'YPM' + String(uid).padStart(7, '0'), name: 'Asha', completedAt: 500 })
+  const cert = await certificateFor(db, uid)
+  assert.match(cert!.id, /^YPM[A-Z2-9]{8}$/)
+  assert.deepEqual(cert, { id: cert!.id, name: 'Asha', completedAt: 500 })
+  assert.equal((await certificateFor(db, uid))!.id, cert!.id) // stable once issued
   await refund(db, 'pay_A', 600)
   assert.equal(await certificateFor(db, uid), null) // refunded: the course route no longer counts
   await db.prepare(`UPDATE users SET coaching_completed_at = 700 WHERE id = ?`).bind(uid).run()

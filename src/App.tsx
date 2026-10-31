@@ -19,6 +19,8 @@ const Dashboard = lazy(() => import('@/pages/Dashboard'))
 const Learn = lazy(() => import('@/pages/Learn'))
 const RefundPolicy = lazy(() => import('@/pages/RefundPolicy'))
 const DeliveryPolicy = lazy(() => import('@/pages/DeliveryPolicy'))
+const Admin = lazy(() => import('@/pages/Admin'))
+const Certificate = lazy(() => import('@/pages/Certificate'))
 const NotFound = lazy(() => import('@/pages/NotFound'))
 
 /**
@@ -72,6 +74,8 @@ function App() {
               <Route path="/verify" element={<Verify />} />
               <Route path="/login" element={<Login />} />
               <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/certificate" element={<Certificate />} />
+              <Route path="/admin" element={<Admin />} />
               <Route path="/learn/:courseId" element={<Learn />} />
               <Route path="/learn/:courseId/:lectureId" element={<Learn />} />
               <Route path="/blog" element={<Blog />} />

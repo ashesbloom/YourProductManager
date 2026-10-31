@@ -9,37 +9,50 @@ export const PROGRAMME_SIZE = courseLectures(PROGRAMME).length
 const DAY = 86_400_000
 const IST = 19_800_000 // +05:30, so "days" in charts start at Indian midnight
 
-export const certificateId = (userId: number) => `YPM${String(userId).padStart(7, '0')}`
+// No 0/O/1/I: people type these in from a printed certificate.
+const CERT_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
+export const newCertificateId = () =>
+  'YPM' + Array.from(crypto.getRandomValues(new Uint8Array(8)), (b) => CERT_ALPHABET[b % CERT_ALPHABET.length]).join('')
 
 export type Certificate = { id: string; name: string | null; completedAt: number }
 
 /**
  * Earned by EITHER completing every programme lecture while enrolled, OR an admin marking the 1:1
- * Coaching Programme complete. Dated by whichever came first.
+ * Coaching Programme complete. Dated by whichever came first. The public ID is assigned on first issue.
  */
 export async function certificateFor(db: D1Database, userId: number): Promise<Certificate | null> {
   const row = await db
     .prepare(
-      `SELECT u.name, u.coaching_completed_at AS coached,
+      `SELECT u.name, u.cert_id, u.coaching_completed_at AS coached,
          EXISTS(SELECT 1 FROM enrollments e WHERE e.user_id = u.id AND e.course_id = ? AND e.revoked_at IS NULL) AS enrolled,
          (SELECT COUNT(*) FROM progress p WHERE p.user_id = u.id AND p.completed_at IS NOT NULL AND p.lecture_id GLOB ?) AS done,
          (SELECT MAX(p.completed_at) FROM progress p WHERE p.user_id = u.id AND p.lecture_id GLOB ?) AS last
        FROM users u WHERE u.id = ?`,
     )
     .bind(PROGRAMME, PROGRAMME_GLOB, PROGRAMME_GLOB, userId)
-    .first<{ name: string | null; coached: number | null; enrolled: number; done: number; last: number | null }>()
+    .first<{ name: string | null; cert_id: string | null; coached: number | null; enrolled: number; done: number; last: number | null }>()
   if (!row) return null
   const course = row.enrolled && row.done >= PROGRAMME_SIZE ? row.last : null
   const dates = [course, row.coached].filter((d): d is number => d !== null)
-  return dates.length ? { id: certificateId(userId), name: row.name, completedAt: Math.min(...dates) } : null
+  if (!dates.length) return null
+  let id = row.cert_id
+  if (!id) {
+    // Two concurrent requests may both get here; only the first write sticks, so re-read the winner.
+    await db.prepare(`UPDATE users SET cert_id = ? WHERE id = ? AND cert_id IS NULL`).bind(newCertificateId(), userId).run()
+    id = (await db.prepare(`SELECT cert_id FROM users WHERE id = ?`).bind(userId).first<{ cert_id: string }>())!.cert_id
+  }
+  return { id, name: row.name, completedAt: Math.min(...dates) }
 }
 
 // ---- Routes ----
 
 /** Public: anyone can check a certificate ID. */
 export async function verifyCertificate(env: Env, id: string): Promise<Response> {
-  const m = /^YPM(\d{7})$/.exec(id.toUpperCase())
-  const cert = m && Number(m[1]) > 0 ? await certificateFor(env.DB, Number(m[1])) : null
+  const user = /^YPM[A-Z0-9]{8}$/.test(id.toUpperCase())
+    ? await env.DB.prepare(`SELECT id FROM users WHERE cert_id = ?`).bind(id.toUpperCase()).first<{ id: number }>()
+    : null
+  // Re-checked on every lookup, so a certificate from a refunded course stops verifying.
+  const cert = user ? await certificateFor(env.DB, user.id) : null
   if (!cert) return json({ error: 'No certificate with that ID' }, 404)
   return json({ name: cert.name ?? 'YPM Learner', completedAt: cert.completedAt })
 }
@@ -49,7 +62,9 @@ export async function saveProfile(req: Request, env: Env): Promise<Response> {
   const body = await readJson(req)
   const name = typeof body.name === 'string' ? body.name.trim().replace(/\s+/g, ' ').slice(0, 80) : ''
   if (name.length < 2) throw new HttpError(400, 'Enter your full name as it should appear on your certificate')
-  await env.DB.prepare(`UPDATE users SET name = ? WHERE id = ?`).bind(name, session.userId).run()
+  // Once a certificate is issued its name is fixed (it may still be filled in if it was blank).
+  const res = await env.DB.prepare(`UPDATE users SET name = ? WHERE id = ? AND (cert_id IS NULL OR name IS NULL)`).bind(name, session.userId).run()
+  if (!res.meta.changes) throw new HttpError(409, 'Your certificate has been issued, so the name is locked. Contact support to correct it.')
   return json({ name })
 }
 
@@ -140,11 +155,14 @@ export async function adminStatsRoute(req: Request, env: Env): Promise<Response>
 export async function adminCoaching(req: Request, env: Env): Promise<Response> {
   const admin = await requireAdmin(req, env)
   const body = await readJson(req)
-  const userId = Number(body.userId)
-  if (!Number.isInteger(userId) || userId <= 0) throw new HttpError(400, 'Invalid user')
+  const email = typeof body.email === 'string' ? body.email.trim().toLowerCase() : ''
   const now = Date.now()
-  const res = await env.DB.prepare(`UPDATE users SET coaching_completed_at = ? WHERE id = ?`).bind(body.done ? now : null, userId).run()
-  if (!res.meta.changes) throw new HttpError(404, 'No such user')
+  // By email, so 1:1 clients who never bought the course can be marked too (they must have logged in once).
+  const user = await env.DB.prepare(`UPDATE users SET coaching_completed_at = ? WHERE email = ? RETURNING id`)
+    .bind(body.done ? now : null, email)
+    .first<{ id: number }>()
+  if (!user) throw new HttpError(404, 'No account with that email yet. Ask them to log in once first.')
+  const userId = user.id
   await env.DB.prepare(`INSERT INTO events(user_id, type, data, at) VALUES(?, 'coaching', ?, ?)`)
     .bind(userId, JSON.stringify({ done: !!body.done, by: admin.userId }), now)
     .run()

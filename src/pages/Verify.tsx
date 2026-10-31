@@ -1,15 +1,15 @@
 import { useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
+import { useQuery } from '@tanstack/react-query'
+import { api, ApiError } from '@/lib/api'
+import { certDate } from '@/lib/me'
 import { BadgeCheck, SearchX, ShieldCheck } from 'lucide-react'
 import { CertificateCard } from '@/components/CertificateCard'
 
 type Issued = { name: string; completedOn: string }
 
-// ponytail: static list; swap for an API lookup once the LMS issues certificates.
-// YPM0000000 is the sample shown on the home page — remove it once real IDs exist.
-const ISSUED: Record<string, Issued> = {
-  YPM0000000: { name: 'Sample Learner', completedOn: '02/03/26' },
-}
+// The sample shown on the home page; every real ID is checked with the server.
+const SAMPLE: Record<string, Issued> = { YPM0000000: { name: 'Sample Learner', completedOn: '02/03/26' } }
 
 const normalize = (raw: string) => raw.trim().toUpperCase().replace(/\s+/g, '')
 
@@ -18,7 +18,21 @@ export default function Verify() {
   const initial = normalize(params.get('id') ?? '')
   const [input, setInput] = useState(initial)
   const [checked, setChecked] = useState(initial)
-  const record = checked ? ISSUED[checked] : undefined
+  const { data: record, isFetching } = useQuery({
+    queryKey: ['certificate', checked],
+    enabled: !!checked,
+    retry: false,
+    queryFn: async (): Promise<Issued | null> => {
+      if (SAMPLE[checked]) return SAMPLE[checked]
+      try {
+        const r = await api<{ name: string; completedAt: number }>(`/api/certificate/${encodeURIComponent(checked)}`)
+        return { name: r.name, completedOn: certDate(r.completedAt) }
+      } catch (err) {
+        if (err instanceof ApiError && err.status === 404) return null
+        throw err
+      }
+    },
+  })
 
   return (
     <div className="bg-black px-4 pt-32 pb-24 text-white">
@@ -91,7 +105,7 @@ export default function Verify() {
           </div>
         )}
 
-        {checked && !record && (
+        {checked && record === null && !isFetching && (
           <div className="rounded-3xl border border-red-400/30 bg-red-400/5 p-6 text-center md:p-8">
             <SearchX size={26} className="mx-auto text-red-300" />
             <p className="mt-3 font-bold text-red-200">No certificate found for “{checked}”.</p>

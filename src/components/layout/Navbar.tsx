@@ -20,7 +20,7 @@ export function Navbar() {
   const items = me?.user ? navLinks.map((l) => (l.href === '/login' ? { href: '/dashboard', label: 'My Courses' } : l)) : navLinks
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 transition-none">
+    <header className="fixed top-0 left-0 right-0 z-50 transition-none print:hidden">
       <PillNav
         items={items}
         activeHref={location.pathname}

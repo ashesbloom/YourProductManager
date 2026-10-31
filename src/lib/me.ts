@@ -1,7 +1,14 @@
 import { useQuery } from '@tanstack/react-query'
 import { api } from '@/lib/api'
 import { courseLectures, type Lecture } from '@/data/catalog'
-export type Me = { user: { email: string; name: string | null } | null; enrollments: string[] }
+export type Me = {
+  user: { email: string; name: string | null; isAdmin: boolean } | null
+  enrollments: string[]
+  certificate?: { id: string; completedAt: number } | null
+}
+
+/** DD/MM/YY, as printed on the certificate. */
+export const certDate = (ms: number) => new Date(ms).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: '2-digit' })
 
 export const useMe = () => useQuery({ queryKey: ['me'], queryFn: () => api<Me>('/api/me') })
 export type LectureProgress = { positionS: number; pct: number; completed: boolean; updatedAt: number }

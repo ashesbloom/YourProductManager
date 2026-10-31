@@ -140,3 +140,9 @@ details summary::-webkit-details-marker {
     @apply bg-background text-foreground;
   }
 }
+
+/* The certificate page prints alone (Download PDF). */
+@media print {
+  .crisp-client { display: none !important; }
+  @page { size: landscape; margin: 10mm; }
+}

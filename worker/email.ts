@@ -37,9 +37,14 @@ export async function contact(req: Request, env: Env): Promise<Response> {
   // Resend's quota is shared with login codes, so a hard global cap keeps a flood from breaking login.
   // ponytail: global cap + honeypot; add Turnstile (as on login) if real spam starts hitting the cap.
   const now = Date.now()
-  const recent = await env.DB.prepare(`SELECT COUNT(*) AS n FROM events WHERE type = 'contact' AND at > ?`).bind(now - 3_600_000).first<{ n: number }>()
-  if ((recent?.n ?? 0) >= CONTACT_PER_HOUR) throw new HttpError(429, `Too many messages right now. Please email ${SUPPORT_EMAIL} directly.`)
-  await env.DB.prepare(`INSERT INTO events(user_id, type, data, at) VALUES(NULL, 'contact', ?, ?)`).bind(JSON.stringify({ topic }), now).run()
+  // Count-and-reserve in one statement, so a burst of parallel requests can't overshoot the cap.
+  const slot = await env.DB.prepare(
+    `INSERT INTO events(user_id, type, data, at) SELECT NULL, 'contact', ?, ?
+     WHERE (SELECT COUNT(*) FROM events WHERE type = 'contact' AND at > ?) < ?`,
+  )
+    .bind(JSON.stringify({ topic }), now, now - 3_600_000, CONTACT_PER_HOUR)
+    .run()
+  if (!slot.meta.changes) throw new HttpError(429, `Too many messages right now. Please email ${SUPPORT_EMAIL} directly.`)
   await sendEmail(env, SUPPORT_EMAIL, `[${topic}] Enquiry from ${name}`, `${message}\n\n— ${name} <${email}>`, email)
   return json({ ok: true })
 }
