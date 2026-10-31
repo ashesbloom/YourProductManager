@@ -90,7 +90,7 @@ export const COURSES: Record<string, Course> = {
       {
         title: 'PM Basics',
         lectures: [
-          L('foundations-01', 'Foundations of Strategic Product Management', true),
+          L('foundations-01', 'Foundations of Strategic Product Management'),
           L('foundations-02', 'Market Intelligence & Discovery'),
           L('foundations-03', 'Strategic Vision & Goal Setting'),
           L('foundations-04', 'Problem Refinement & Validation'),

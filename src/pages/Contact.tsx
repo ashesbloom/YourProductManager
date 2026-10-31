@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion'
 import { ArrowUpRight, Calendar, Mail, MessageCircle, Send } from 'lucide-react'
-import { CALENDLY_URL, SUPPORT_EMAIL, WHATSAPP_URL } from '@/lib/links'
+import { CALENDLY_URL, PHONE, SUPPORT_EMAIL, WHATSAPP_URL } from '@/lib/links'
 
 const CHANNELS = [
   {
@@ -14,7 +14,7 @@ const CHANNELS = [
   {
     icon: MessageCircle,
     title: 'WhatsApp',
-    body: 'Quick questions about courses, coaching or mock interviews.',
+    body: `${PHONE}. Quick questions about courses, coaching or mock interviews.`,
     cta: 'Start a chat',
     href: WHATSAPP_URL,
     featured: false,

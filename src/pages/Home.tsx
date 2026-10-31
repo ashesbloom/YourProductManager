@@ -10,6 +10,7 @@ import { ReelsSection } from '../components/sections/ReelsSection'
 import { Book3D } from '../components/Book3D'
 import { BOOK, KINDLE_URL } from '../data/book'
 import { CALENDLY_URL, whatsappLink } from '../lib/links'
+import { track } from '../lib/analytics'
 import { PRODUCTS, formatINR } from '../data/catalog'
 
 const PATHS = [
@@ -99,51 +100,37 @@ const WHY = [
   { icon: Compass, title: 'Career strategy call', body: 'A free 15-minute audit of your blind spots and next step.' },
 ]
 
+// Either one earns the certificate; the list renders an OR between them.
 const CERTIFICATE_CRITERIA = [
-  'Complete 50 lectures',
-  'Pass evaluations',
-  'Mock interviews',
-  'Case study',
+  'Complete all lectures in the Product Management Programme',
+  'Successfully complete the 1:1 Coaching Programme',
 ]
 
 const faqs = [
   {
-    q: 'What makes YPM different from generic bootcamps?',
-    a: 'YPM is founder-led and focused on long-term thinking rather than shortcuts. Unlike bootcamps that emphasize templates or rapid outcomes, YPM prioritizes judgment, clarity, and consulting-grade problem solving. There are no exaggerated promises or placement guarantees. The emphasis is on helping you understand why decisions work — not just what to say in interviews.'
+    q: 'Do I need prior experience or a technical background to enroll?',
+    a: 'No. Our courses are designed for beginners, students, freshers, working professionals, and career switchers looking to enter or grow in Product Management. If you have a technical background, that’s an added advantage, especially in AI Product Management, but it is not mandatory. You don’t need an IIT/IIM degree or prior Product Management experience to get started. A willingness to learn and practise is what matters most.',
   },
   {
-    q: 'Who is this program designed for?',
-    a: 'YPM is designed for professionals who want to build strong product judgment and structured thinking. Whether you are transitioning from engineering, consulting, operations, or starting fresh in product roles, the focus is on developing clarity in decision-making — not memorizing frameworks. This program is ideal for individuals who want to think strategically rather than operate tactically.'
+    q: 'Are the courses self-paced, and can I learn remotely?',
+    a: 'Yes! You can access the course lectures online and learn at your own pace, making them suitable for students and working professionals. You can study from anywhere with an internet connection and revisit the learning materials according to the access terms of your purchase.',
   },
   {
-    q: 'I’m not an engineer. Do I need technical experience?',
-    a: 'No technical background is required. You do not need coding knowledge or prior product experience to begin. The programs are designed to build product fundamentals from the ground up, focusing on structured thinking, business understanding, and communication — skills that are transferable across domains.'
+    q: 'Will I receive a certificate after completing the course or 1:1 sessions?',
+    a: 'Yes. Learners who complete the applicable requirements will receive a YPM certificate. This includes learners enrolled in our courses as well as those participating in our 1:1 sessions, subject to the relevant programme completion requirements. The certificate recognizes completion of the YPM learning programme and is not a university degree.',
   },
   {
-    q: 'What is the learning format and time commitment?',
-    a: 'All courses are lecture-based and self-paced, allowing you to learn according to your schedule. The time commitment depends on your depth of engagement, but most learners allocate a few focused hours per week to build consistent progress. Private coaching and mock interviews are scheduled based on mutual availability.'
-  },
-  {
-    q: 'Is this suitable for beginners?',
-    a: 'Yes. The programs are structured to start with foundational product thinking before moving toward more advanced strategic concepts. Beginners can build clarity step by step, while experienced professionals can refine and deepen their thinking.'
+    q: 'Does YPM provide interview preparation and career support?',
+    a: 'Yes! Depending on the programme you choose, support may include mock interviews, resume and LinkedIn profile reviews, portfolio feedback, practical case studies, and personalized 1:1 sessions to help you prepare for Product Management opportunities.',
   },
   {
     q: 'How is 1:1 coaching different from the course?',
-    a: 'The self-paced course provides structured foundational learning. 1:1 coaching is more intensive and focused on your specific challenges, goals, and growth areas. It involves direct feedback, strategic conversations, and deeper refinement.'
-  },
-  {
-    q: 'What happens after completing the course?',
-    a: 'The goal of YPM is not short-term motivation but long-term capability. After completing the program, you should have stronger clarity in how you analyze problems, prioritize decisions, and communicate product strategy. Many learners continue refining their skills through mock interviews, coaching, or independent application in their roles.'
-  },
-  {
-    q: 'How do I pay?',
-    a: 'Prices are in ₹ and include GST. Pay securely with UPI, cards or netbanking via Razorpay.'
+    a: 'The self-paced course provides structured foundational learning to help you understand Product Management concepts at your own pace. 1:1 coaching is more intensive and personalized, focusing on your specific challenges, goals, and growth areas. It involves direct feedback, strategic conversations, and deeper refinement tailored to your individual needs.',
   },
 ]
 
 const h2 = "font-['Montserrat'] text-3xl md:text-4xl font-bold tracking-tight text-white"
 
-const LEAD_GOALS = ['Moving into product management', 'Growing as a PM', 'Moving into AI product management', 'Preparing for PM interviews']
 const field =
   'block h-12 w-full rounded-xl border border-white/10 bg-white/5 px-4 text-white placeholder:text-white/35 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30'
 const fieldLabel = 'mb-2 block text-sm font-semibold text-white/75'
@@ -156,7 +143,8 @@ function LeadForm() {
       onSubmit={(e) => {
         e.preventDefault()
         const f = new FormData(e.currentTarget)
-        const text = `Hi Khushbu, I'm ${f.get('name')}, currently ${f.get('role')}. I'd like guidance on: ${f.get('goal')}.`
+        const text = `Hi Khushbu, I'm ${f.get('name')}, currently ${f.get('role')}. I'd like help with: ${f.get('goal')}`
+        track('whatsapp_click', { location: 'hero_form' })
         window.open(whatsappLink(text), '_blank', 'noopener')
       }}
     >
@@ -174,11 +162,7 @@ function LeadForm() {
         </div>
         <div>
           <label htmlFor="lead-goal" className={fieldLabel}>I want help with</label>
-          <select id="lead-goal" name="goal" className={`${field} [&>option]:bg-[#07070c]`} defaultValue={LEAD_GOALS[0]}>
-            {LEAD_GOALS.map((g) => (
-              <option key={g}>{g}</option>
-            ))}
-          </select>
+          <input id="lead-goal" name="goal" className={field} placeholder="e.g. Switching into an AI PM role" required maxLength={200} />
         </div>
       </div>
 
@@ -216,7 +200,7 @@ export default function Home() {
         <div className="container-wide grid flex-1 items-center gap-x-16 gap-y-12 lg:grid-cols-[1fr_minmax(0,26rem)]">
           <div className="motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-3 motion-safe:duration-700">
             <h1 className="font-['Montserrat'] text-[clamp(2.6rem,6vw,6.25rem)] font-extrabold leading-[1] tracking-[-0.025em]">
-              Think like a product manager.
+              Think like a Product Manager.
             </h1>
             <p className="mt-7 max-w-lg text-lg leading-relaxed text-white/65 lg:text-xl">
               Courses, 1:1 coaching and mock interviews with Khushbu Sharma.
@@ -359,29 +343,35 @@ export default function Home() {
           <div data-reveal>
             <h2 className={`${h2} mb-4`}>Industry-aligned completion certificate</h2>
             <p className="mb-10 text-white/60">
-              Issued after 100% course completion, including all lectures, evaluations,
-              mock interviews, and your final product case study.
+              Earned by completing either of the two programmes below.
             </p>
 
             <p className="mb-5 text-sm font-semibold text-white/45">What unlocks it</p>
             <ul className="space-y-3.5">
               {CERTIFICATE_CRITERIA.map((item, i) => (
-                <li key={item} className="flex items-center gap-x-3">
-                  <span
-                    className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full transition-all duration-300 ${
-                      certificateUnlocked ? 'bg-brand text-white' : 'border border-white/20 text-transparent'
-                    }`}
-                    style={{ transitionDelay: certificateUnlocked ? `${i * 90}ms` : '0ms' }}
-                  >
-                    <CheckCircle size={13} strokeWidth={3} />
-                  </span>
-                  <span
-                    className={`text-sm transition-colors duration-300 ${
-                      certificateUnlocked ? 'text-white' : 'text-white/45'
-                    }`}
-                    style={{ transitionDelay: certificateUnlocked ? `${i * 90}ms` : '0ms' }}
-                  >
-                    {item}
+                <li key={item}>
+                  {i > 0 && (
+                    <span className="mb-3.5 ml-8 inline-block rounded-full border border-[#FBBF24]/40 px-3 py-0.5 text-xs font-black tracking-widest text-[#FBBF24]">
+                      OR
+                    </span>
+                  )}
+                  <span className="flex items-center gap-x-3">
+                    <span
+                      className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full transition-all duration-300 ${
+                        certificateUnlocked ? 'bg-brand text-white' : 'border border-white/20 text-transparent'
+                      }`}
+                      style={{ transitionDelay: certificateUnlocked ? `${i * 90}ms` : '0ms' }}
+                    >
+                      <CheckCircle size={13} strokeWidth={3} />
+                    </span>
+                    <span
+                      className={`text-sm transition-colors duration-300 ${
+                        certificateUnlocked ? 'text-white' : 'text-white/45'
+                      }`}
+                      style={{ transitionDelay: certificateUnlocked ? `${i * 90}ms` : '0ms' }}
+                    >
+                      {item}
+                    </span>
                   </span>
                 </li>
               ))}

@@ -3,6 +3,7 @@ import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
 import { useScrollReveal } from '@/hooks/useScrollReveal'
+import { pageView } from '@/lib/analytics'
 
 const Home = lazy(() => import('@/pages/Home'))
 const Courses = lazy(() => import('@/pages/Courses'))
@@ -35,6 +36,7 @@ function RevealScope({ children }: { children: ReactNode }) {
     if (target) target.scrollIntoView({ behavior: 'instant' })
     else window.scrollTo({ top: 0, behavior: 'instant' })
   }, [pathname, hash])
+  useEffect(() => pageView(pathname), [pathname])
   useScrollReveal(pathname)
   return <>{children}</>
 }

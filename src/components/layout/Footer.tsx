@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { ArrowUpRight, Linkedin, Mail, MessageCircle, Phone, Youtube, X } from 'lucide-react'
+import { ArrowUpRight, Linkedin, Mail, MessageCircle, Phone, Youtube } from 'lucide-react'
 import { Logo } from '@/components/Logo'
 import { CALENDLY_URL, SUPPORT_EMAIL, WHATSAPP_URL } from '@/lib/links'
 
@@ -29,7 +29,6 @@ const columns = [
 const socials = [
   { href: 'https://www.linkedin.com/', label: 'LinkedIn', icon: Linkedin },
   { href: 'https://www.youtube.com/', label: 'YouTube', icon: Youtube },
-  { href: 'https://x.com/', label: 'X', icon: X },
 ]
 
 const headingClass = 'text-xs font-semibold uppercase tracking-[0.18em] text-white/40'

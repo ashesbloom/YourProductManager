@@ -4,6 +4,7 @@ import { BrowserRouter } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import App from './App'
 import { CRISP_WEBSITE_ID } from './lib/links'
+import { initAnalytics } from './lib/analytics'
 import './styles.css'
 
 // First-touch attribution for Meta ads: remember the first landing's UTM/fbclid until the visitor signs up.
@@ -26,13 +27,10 @@ try {
 }
 
 // Live chat bubble (bottom-right). Appearance, colour and opening hours are set in the Crisp dashboard.
-if (CRISP_WEBSITE_ID !== 'REPLACE_ME') {
-  Object.assign(window, { $crisp: [], CRISP_WEBSITE_ID })
-  const s = document.createElement('script')
-  s.src = 'https://client.crisp.chat/l.js'
-  s.async = true
-  document.head.appendChild(s)
-}
+Object.assign(window, { $crisp: [], CRISP_WEBSITE_ID })
+document.head.append(Object.assign(document.createElement('script'), { src: 'https://client.crisp.chat/l.js', async: true }))
+
+initAnalytics()
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { staleTime: 60_000, retry: 1, refetchOnWindowFocus: false } },
