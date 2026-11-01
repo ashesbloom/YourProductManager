@@ -4,7 +4,8 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { ArrowUpRight } from 'lucide-react'
 import { CERTIFICATE_PROGRAMME, formatINR } from '@/data/catalog'
 import { api } from '@/lib/api'
-import { useMe } from '@/lib/me'
+import { certDate, useMe } from '@/lib/me'
+import { CertificateCard } from '@/components/CertificateCard'
 
 type Stats = {
   totalStudents: number
@@ -86,6 +87,12 @@ const input = 'h-11 w-full rounded-xl border border-white/10 bg-white/5 px-4 tex
 function Certificates({ list, setCoaching, refresh }: { list: IssuedCertificate[]; setCoaching: (email: string, done: boolean) => Promise<void>; refresh: () => void }) {
   const form = useRef<HTMLFormElement>(null)
   const [status, setStatus] = useState('')
+  // What the certificate will look like, updated as the form is typed in.
+  const [preview, setPreview] = useState({ name: '', title: '' })
+  const syncPreview = () => {
+    const f = form.current!
+    setPreview({ name: (f.elements.namedItem('name') as HTMLInputElement).value, title: (f.elements.namedItem('title') as HTMLInputElement).value })
+  }
   const act = async (pending: string, done: string, fn: () => Promise<unknown>) => {
     setStatus(pending)
     try {
@@ -102,6 +109,7 @@ function Certificates({ list, setCoaching, refresh }: { list: IssuedCertificate[
     ;(f.elements.namedItem('name') as HTMLInputElement).value = c.name ?? ''
     ;(f.elements.namedItem('title') as HTMLInputElement).value = c.title ?? ''
     ;(f.elements.namedItem('send') as HTMLInputElement).checked = false
+    syncPreview()
     f.scrollIntoView({ block: 'center' })
     ;(f.elements.namedItem('name') as HTMLInputElement).focus()
   }
@@ -112,9 +120,11 @@ function Certificates({ list, setCoaching, refresh }: { list: IssuedCertificate[
       <p className="mt-1 text-sm text-white/55">
         Course students get theirs automatically, by email, after the last AI PM lecture. Issue one here for 1:1 coaching or anyone else. Use the same email again to fix a name or programme.
       </p>
+      <div className="mt-5 grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] lg:items-start">
       <form
         ref={form}
-        className="mt-5 grid gap-3 md:grid-cols-[1fr_1fr_1fr_auto] md:items-end"
+        className="grid gap-3"
+        onInput={syncPreview}
         onSubmit={(e) => {
           e.preventDefault()
           const f = e.currentTarget
@@ -123,6 +133,7 @@ function Certificates({ list, setCoaching, refresh }: { list: IssuedCertificate[
           act('Issuing…', `Certificate issued${send ? ' and emailed' : ''} to ${data.email}.`, async () => {
             await api('/api/admin/certificate', { ...data, send })
             f.reset()
+            setPreview({ name: '', title: '' })
           })
         }}
       >
@@ -140,14 +151,19 @@ function Certificates({ list, setCoaching, refresh }: { list: IssuedCertificate[
           </span>
           <input name="title" maxLength={80} placeholder={CERTIFICATE_PROGRAMME} className={input} />
         </label>
-        <button type="submit" className="btn-primary h-11 justify-center">
-          Issue certificate
-        </button>
-        <label className="flex items-center gap-2 text-sm text-white/70 md:col-span-4">
+        <label className="flex items-center gap-2 text-sm text-white/70">
           <input name="send" type="checkbox" defaultChecked className="h-4 w-4 accent-[#8b5cf6]" />
           Email it to them now (a link to view and download the PDF)
         </label>
+        <button type="submit" className="btn-primary h-11 justify-center sm:justify-self-start">
+          Issue certificate
+        </button>
       </form>
+      <figure>
+        <CertificateCard unlocked name={preview.name.trim() || 'Name'} programme={preview.title.trim() || null} completedOn={certDate(Date.now())} certificateId="YPM········" />
+        <figcaption className="mt-2 text-xs text-white/40">Preview. The ID is assigned when you issue it.</figcaption>
+      </figure>
+      </div>
       <p role="status" className="mt-3 min-h-5 text-sm text-accent">
         {status}
       </p>
@@ -216,6 +232,7 @@ export default function Admin() {
 
   if (isPending) return <div className="min-h-[60vh] bg-black" />
   if (!me?.user) return <Navigate to="/login?next=/admin" replace />
+  const certOf = new Map(s?.certificates.map((c) => [c.email, c.id]))
   if (!isAdmin) return <Navigate to="/dashboard" replace />
 
   async function setCoaching(email: string, done: boolean) {
@@ -258,10 +275,10 @@ export default function Admin() {
             <section className={card}>
               <h2 className="font-['Montserrat'] text-xl font-bold">Students</h2>
               <div className="mt-4 overflow-x-auto">
-                <table className="w-full min-w-[44rem] text-left text-sm">
+                <table className="w-full min-w-[52rem] text-left text-sm">
                   <thead className="text-white/45">
                     <tr>
-                      {['Name', 'Email', 'Course', 'Progress', 'Purchased', 'Last watched', '1:1 coaching done'].map((h) => (
+                      {['Name', 'Email', 'Course', 'Progress', 'Purchased', 'Last watched', 'Certificate', '1:1 coaching done'].map((h) => (
                         <th key={h} className="pb-3 pr-4 font-semibold">
                           {h}
                         </th>
@@ -277,6 +294,15 @@ export default function Admin() {
                         <td className="py-3 pr-4 tabular-nums">{st.progress}%</td>
                         <td className="py-3 pr-4 text-white/70">{date(st.enrolledAt)}</td>
                         <td className="py-3 pr-4 text-white/70">{st.lastWatchedAt ? date(st.lastWatchedAt) : '—'}</td>
+                        <td className="py-3 pr-4 tabular-nums">
+                          {certOf.get(st.email) ? (
+                            <Link to={`/verify?id=${certOf.get(st.email)}`} target="_blank" className="text-purple-300 hover:text-white">
+                              {certOf.get(st.email)}
+                            </Link>
+                          ) : (
+                            <span className="text-white/40">Not yet</span>
+                          )}
+                        </td>
                         <td className="py-3">
                           <input
                             type="checkbox"
@@ -290,7 +316,7 @@ export default function Admin() {
                     ))}
                     {!s.students.length && (
                       <tr>
-                        <td colSpan={7} className="py-6 text-center text-white/45">
+                        <td colSpan={8} className="py-6 text-center text-white/45">
                           No students yet.
                         </td>
                       </tr>

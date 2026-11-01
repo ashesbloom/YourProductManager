@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type CSSProperties } from 'react'
+import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { gsap } from 'gsap'
 import { Logo } from './Logo'
@@ -20,6 +20,10 @@ type PillNavProps = {
   hoveredPillTextColor?: string
   pillTextColor?: string
   onMobileMenuClick?: () => void
+  /** Desktop-only control after the pills (the profile button). */
+  trailing?: ReactNode
+  /** The mobile menu's items, when they differ from the desktop pills. */
+  mobileItems?: PillNavItem[]
 }
 
 function isExternalLink(href: string) {
@@ -47,6 +51,8 @@ export default function PillNav({
   hoveredPillTextColor = '#f8fafc',
   pillTextColor,
   onMobileMenuClick,
+  trailing,
+  mobileItems = items,
 }: PillNavProps) {
   const resolvedPillTextColor = pillTextColor ?? baseColor
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
@@ -124,6 +130,7 @@ export default function PillNav({
         </Link>
 
         <div className="pill-nav-items desktop-only">
+          <div className="flex items-center">
           <ul className="pill-list" role="menubar">
             {items.map((item, i) => {
               const className = `pill${activeHref === item.href ? ' is-active' : ''}${item.href === '/login' ? ' pill-login' : ''}`
@@ -143,6 +150,8 @@ export default function PillNav({
               )
             })}
           </ul>
+          {trailing}
+          </div>
         </div>
 
         <button
@@ -158,7 +167,7 @@ export default function PillNav({
 
       <div className="mobile-menu-popover mobile-only" ref={mobileMenuRef} style={cssVars}>
         <ul className="mobile-menu-list">
-          {items.map((item, i) => (
+          {mobileItems.map((item, i) => (
             <li key={item.href || `mobile-item-${i}`}>
               {isRouterLink(item.href) ? (
                 <Link
