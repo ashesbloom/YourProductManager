@@ -43,3 +43,20 @@ export const CONTENT_TYPES: Record<string, string> = {
   jpg: 'image/jpeg',
   vtt: 'text/vtt',
 }
+
+/** Base64 for email attachments, in chunks so large files don't overflow the call stack. */
+export function toBase64(bytes: Uint8Array): string {
+  let bin = ''
+  for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode(...bytes.subarray(i, i + 0x8000))
+  return btoa(bin)
+}
+
+export const isPdf = (b: Uint8Array) => b.length > 4 && String.fromCharCode(...b.subarray(0, 5)) === '%PDF-'
+
+/** The image type by its first bytes (never by the client's word), for the signature upload. */
+export function imageType(b: Uint8Array): 'image/png' | 'image/jpeg' | 'image/webp' | null {
+  if (b[0] === 0x89 && b[1] === 0x50 && b[2] === 0x4e && b[3] === 0x47) return 'image/png'
+  if (b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff) return 'image/jpeg'
+  if (String.fromCharCode(...b.subarray(0, 4)) === 'RIFF' && String.fromCharCode(...b.subarray(8, 12)) === 'WEBP') return 'image/webp'
+  return null
+}

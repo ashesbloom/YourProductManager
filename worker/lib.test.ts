@@ -427,3 +427,15 @@ test('certificate: admin issue creates the account, re-issue only edits; the aut
   assert.equal(await claimCertificateEmail(db, first.userId, 300), true)
   assert.equal(await claimCertificateEmail(db, first.userId, 301), false)
 })
+
+import { imageType, isPdf, toBase64 } from './lib.ts'
+test('uploads: base64 matches Node for large files; PDF and image types come from the bytes', () => {
+  const big = new Uint8Array(200_001).map((_, i) => (i * 31) % 256)
+  assert.equal(toBase64(big), Buffer.from(big).toString('base64'))
+  assert.equal(isPdf(new TextEncoder().encode('%PDF-1.7\n...')), true)
+  assert.equal(isPdf(new TextEncoder().encode('<html>')), false)
+  assert.equal(imageType(Uint8Array.from([0x89, 0x50, 0x4e, 0x47, 0x0d])), 'image/png')
+  assert.equal(imageType(Uint8Array.from([0xff, 0xd8, 0xff, 0xe0])), 'image/jpeg')
+  assert.equal(imageType(new TextEncoder().encode('RIFF\0\0\0\0WEBPVP8 ')), 'image/webp')
+  assert.equal(imageType(new TextEncoder().encode('%PDF-1.7')), null)
+})

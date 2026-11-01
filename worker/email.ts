@@ -2,17 +2,24 @@ import { SUPPORT_EMAIL } from '../src/lib/links.ts'
 import { HttpError, json, readJson } from './http.ts'
 import { isEmail } from './lib.ts'
 
-export async function sendEmail(env: Env, to: string, subject: string, text: string, replyTo?: string): Promise<void> {
+export async function sendEmail(
+  env: Env,
+  to: string,
+  subject: string,
+  text: string,
+  replyTo?: string,
+  attachments?: Array<{ filename: string; content: string }>, // content is base64
+): Promise<void> {
   if (!env.RESEND_API_KEY) {
     // Local dev without Resend: read the email (e.g. a login code) from the dev server console.
     // Production must have RESEND_API_KEY set (Task 13 checklist), or codes would land in Workers Logs.
-    console.log(JSON.stringify({ msg: 'email not sent (no RESEND_API_KEY)', to, subject, text }))
+    console.log(JSON.stringify({ msg: 'email not sent (no RESEND_API_KEY)', to, subject, text, attachments: attachments?.map((a) => a.filename) }))
     return
   }
   const res = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: { authorization: `Bearer ${env.RESEND_API_KEY}`, 'content-type': 'application/json' },
-    body: JSON.stringify({ from: env.EMAIL_FROM, to, subject, text, reply_to: replyTo }),
+    body: JSON.stringify({ from: env.EMAIL_FROM, to, subject, text, reply_to: replyTo, attachments }),
   })
   if (!res.ok) {
     console.error(JSON.stringify({ msg: 'email failed', to, subject, status: res.status, body: await res.text() }))

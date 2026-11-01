@@ -19,6 +19,14 @@ export async function api<T>(path: string, body?: unknown): Promise<T> {
   return data as T
 }
 
+/** Sends a file as the raw request body (PUT), or removes it (DELETE without a file). */
+export async function upload<T>(path: string, file?: File): Promise<T> {
+  const res = await fetch(path, file ? { method: 'PUT', headers: { 'content-type': file.type || 'application/octet-stream' }, body: file } : { method: 'DELETE' })
+  const data: unknown = await res.json().catch(() => ({}))
+  if (!res.ok) throw new ApiError(res.status, (data as { error?: string }).error ?? 'Something went wrong')
+  return data as T
+}
+
 const scripts = new Map<string, Promise<void>>()
 
 /** Loads a third-party script once (Razorpay Checkout, Turnstile). */

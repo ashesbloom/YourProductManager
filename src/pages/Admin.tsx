@@ -3,7 +3,7 @@ import { Link, Navigate } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { ArrowUpRight } from 'lucide-react'
 import { CERTIFICATE_PROGRAMME, formatINR } from '@/data/catalog'
-import { api } from '@/lib/api'
+import { api, upload } from '@/lib/api'
 import { certDate, useMe } from '@/lib/me'
 import { CertificateCard } from '@/components/CertificateCard'
 
@@ -19,7 +19,7 @@ type Stats = {
   students: Array<{ id: number; name: string | null; email: string; enrolledAt: number; progress: number; lastWatchedAt: number | null; coachingDone: boolean }>
   certificates: IssuedCertificate[]
 }
-type IssuedCertificate = { id: string; email: string; name: string | null; title: string | null; issuedAt: number; coached: boolean }
+type IssuedCertificate = { id: string; email: string; name: string | null; title: string | null; issuedAt: number; coached: boolean; pdf: boolean }
 
 const card = 'rounded-2xl border border-white/10 bg-[#0d0d14] p-5'
 const day = (iso: string) => new Date(iso).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })
@@ -89,6 +89,14 @@ function Certificates({ list, setCoaching, refresh }: { list: IssuedCertificate[
   const [status, setStatus] = useState('')
   // What the certificate will look like, updated as the form is typed in.
   const [preview, setPreview] = useState({ name: '', title: '' })
+  // Khushbu's own PDF, sent and downloaded instead of the site's design.
+  const [pdf, setPdf] = useState<{ file: File; url: string } | null>(null)
+  const choosePdf = (file?: File) => {
+    if (pdf) URL.revokeObjectURL(pdf.url)
+    setPdf(file ? { file, url: URL.createObjectURL(file) } : null)
+  }
+  const [signatureVersion, setSignatureVersion] = useState(0)
+  const [hasSignature, setHasSignature] = useState(true)
   const syncPreview = () => {
     const f = form.current!
     setPreview({ name: (f.elements.namedItem('name') as HTMLInputElement).value, title: (f.elements.namedItem('title') as HTMLInputElement).value })
@@ -109,6 +117,9 @@ function Certificates({ list, setCoaching, refresh }: { list: IssuedCertificate[
     ;(f.elements.namedItem('name') as HTMLInputElement).value = c.name ?? ''
     ;(f.elements.namedItem('title') as HTMLInputElement).value = c.title ?? ''
     ;(f.elements.namedItem('send') as HTMLInputElement).checked = false
+    ;(f.elements.namedItem('pdf') as HTMLInputElement).value = ''
+    choosePdf()
+    setStatus(c.pdf ? 'This certificate uses your own PDF. Choose a new PDF to replace it, or leave it empty to keep it.' : '')
     syncPreview()
     f.scrollIntoView({ block: 'center' })
     ;(f.elements.namedItem('name') as HTMLInputElement).focus()
@@ -118,7 +129,7 @@ function Certificates({ list, setCoaching, refresh }: { list: IssuedCertificate[
     <section id="certificates" className={`${card} scroll-mt-28`}>
       <h2 className="font-['Montserrat'] text-xl font-bold">Certificates</h2>
       <p className="mt-1 text-sm text-white/55">
-        Course students get theirs automatically, by email, after the last AI PM lecture. Issue one here for 1:1 coaching or anyone else. Use the same email again to fix a name or programme.
+        Course students get theirs automatically, by email, after the last AI PM lecture. Issue one here for 1:1 coaching or anyone else, in the site’s design or as your own PDF. Use the same email again to fix a name or programme.
       </p>
       <div className="mt-5 grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] lg:items-start">
       <form
@@ -128,11 +139,17 @@ function Certificates({ list, setCoaching, refresh }: { list: IssuedCertificate[
         onSubmit={(e) => {
           e.preventDefault()
           const f = e.currentTarget
-          const data = Object.fromEntries(new FormData(f))
-          const send = data.send === 'on'
-          act('Issuing…', `Certificate issued${send ? ' and emailed' : ''} to ${data.email}.`, async () => {
-            await api('/api/admin/certificate', { ...data, send })
+          const data = new FormData(f)
+          const email = String(data.get('email'))
+          const send = data.get('send') === 'on'
+          const file = pdf?.file
+          act('Issuing…', `Certificate issued${send ? ' and emailed' : ''} to ${email}.`, async () => {
+            // With a PDF, the email waits until the PDF is stored, so it goes out with the PDF attached.
+            const { id } = await api<{ id: string }>('/api/admin/certificate', { email, name: data.get('name'), title: data.get('title'), send: send && !file })
+            if (file) await upload(`/api/admin/certificate/${id}/pdf`, file)
+            if (file && send) await api('/api/admin/certificate/email', { email })
             f.reset()
+            choosePdf()
             setPreview({ name: '', title: '' })
           })
         }}
@@ -151,17 +168,35 @@ function Certificates({ list, setCoaching, refresh }: { list: IssuedCertificate[
           </span>
           <input name="title" maxLength={80} placeholder={CERTIFICATE_PROGRAMME} className={input} />
         </label>
+        <label className="grid gap-1.5 text-sm">
+          <span className="font-semibold text-white/75">
+            Your own PDF <span className="font-normal text-white/40">(optional, sent instead of the design shown here)</span>
+          </span>
+          <input
+            name="pdf"
+            type="file"
+            accept="application/pdf"
+            onChange={(e) => choosePdf(e.target.files?.[0])}
+            className="text-sm text-white/70 file:mr-3 file:rounded-lg file:border-0 file:bg-white/10 file:px-3 file:py-2 file:font-semibold file:text-white hover:file:bg-white/15"
+          />
+        </label>
         <label className="flex items-center gap-2 text-sm text-white/70">
           <input name="send" type="checkbox" defaultChecked className="h-4 w-4 accent-[#8b5cf6]" />
-          Email it to them now (a link to view and download the PDF)
+          Email it to them now {pdf ? '(with your PDF attached)' : '(a link to view and download the PDF)'}
         </label>
         <button type="submit" className="btn-primary h-11 justify-center sm:justify-self-start">
           Issue certificate
         </button>
       </form>
       <figure>
-        <CertificateCard unlocked name={preview.name.trim() || 'Name'} programme={preview.title.trim() || null} completedOn={certDate(Date.now())} certificateId="YPM········" />
-        <figcaption className="mt-2 text-xs text-white/40">Preview. The ID is assigned when you issue it.</figcaption>
+        {pdf ? (
+          <iframe src={`${pdf.url}#view=FitH&navpanes=0`} title="Your PDF" className="aspect-[1.414/1] w-full rounded-xl bg-white" />
+        ) : (
+          <CertificateCard key={signatureVersion} unlocked name={preview.name.trim() || 'Name'} programme={preview.title.trim() || null} completedOn={certDate(Date.now())} certificateId="YPM········" signatureVersion={signatureVersion} />
+        )}
+        <figcaption className="mt-2 text-xs text-white/40">
+          {pdf ? 'Your PDF, as they will receive it.' : 'Preview. The ID is assigned when you issue it.'}
+        </figcaption>
       </figure>
       </div>
       <p role="status" className="mt-3 min-h-5 text-sm text-accent">
@@ -184,7 +219,10 @@ function Certificates({ list, setCoaching, refresh }: { list: IssuedCertificate[
               <tr key={c.id} className="border-t border-white/5">
                 <td className="py-3 pr-4">{c.name ?? '—'}</td>
                 <td className="py-3 pr-4 text-white/70">{c.email}</td>
-                <td className="py-3 pr-4 text-white/70">{c.title ?? CERTIFICATE_PROGRAMME}</td>
+                <td className="py-3 pr-4 text-white/70">
+                  {c.title ?? CERTIFICATE_PROGRAMME}
+                  {c.pdf && <span className="ml-2 rounded-full border border-purple-400/40 bg-purple-500/10 px-2 py-0.5 text-xs font-semibold text-purple-200">Your PDF</span>}
+                </td>
                 <td className="py-3 pr-4 tabular-nums">
                   <Link to={`/verify?id=${c.id}`} target="_blank" className="text-purple-300 hover:text-white">
                     {c.id}
@@ -198,6 +236,15 @@ function Certificates({ list, setCoaching, refresh }: { list: IssuedCertificate[
                   <button type="button" onClick={() => edit(c)} className="rounded-lg px-2.5 py-1.5 font-semibold text-white/70 hover:bg-white/5 hover:text-white">
                     Edit
                   </button>
+                  {c.pdf && (
+                    <button
+                      type="button"
+                      onClick={() => act('Switching…', `${c.email} now gets the site’s design.`, () => upload(`/api/admin/certificate/${c.id}/pdf`))}
+                      className="rounded-lg px-2.5 py-1.5 font-semibold text-white/70 hover:bg-white/5 hover:text-white"
+                    >
+                      Use site design
+                    </button>
+                  )}
                   {c.coached && (
                     <button
                       type="button"
@@ -219,6 +266,57 @@ function Certificates({ list, setCoaching, refresh }: { list: IssuedCertificate[
             )}
           </tbody>
         </table>
+      </div>
+
+      <div className="mt-8 flex flex-wrap items-center gap-5 border-t border-white/10 pt-6">
+        <div className="flex h-20 w-56 items-center justify-center rounded-xl bg-white p-2">
+          {hasSignature ? (
+            <img key={signatureVersion} src={`/api/signature?v=${signatureVersion}`} alt="Current signature" onError={() => setHasSignature(false)} className="max-h-full max-w-full object-contain" />
+          ) : (
+            <span className="font-['Playfair_Display'] text-xl italic text-[#12243C]">Khushbu</span>
+          )}
+        </div>
+        <div className="min-w-0 flex-1">
+          <h3 className="font-semibold">Signature</h3>
+          <p className="mt-1 text-sm text-white/55">
+            Printed on every certificate in the site’s design. Use a PNG with a transparent background. {hasSignature ? '' : 'Until you upload one, her name is set in script.'}
+          </p>
+          <div className="mt-3 flex flex-wrap items-center gap-3">
+            <label className="btn-secondary h-10 cursor-pointer">
+              Upload signature
+              <input
+                type="file"
+                accept="image/png,image/jpeg,image/webp"
+                className="sr-only"
+                onChange={(e) => {
+                  const file = e.target.files?.[0]
+                  e.target.value = ''
+                  if (file)
+                    act('Uploading signature…', 'Signature updated on every certificate.', async () => {
+                      await upload('/api/admin/signature', file)
+                      setHasSignature(true)
+                      setSignatureVersion(Date.now())
+                    })
+                }}
+              />
+            </label>
+            {hasSignature && (
+              <button
+                type="button"
+                onClick={() =>
+                  act('Removing…', 'Signature removed.', async () => {
+                    await upload('/api/admin/signature')
+                    setHasSignature(false)
+                    setSignatureVersion(Date.now())
+                  })
+                }
+                className="text-sm font-semibold text-white/60 hover:text-white"
+              >
+                Remove
+              </button>
+            )}
+          </div>
+        </div>
       </div>
     </section>
   )

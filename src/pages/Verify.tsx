@@ -6,7 +6,7 @@ import { certDate } from '@/lib/me'
 import { BadgeCheck, Download, SearchX, ShieldCheck } from 'lucide-react'
 import { CertificateCard } from '@/components/CertificateCard'
 
-type Issued = { name: string; completedOn: string; title?: string | null }
+type Issued = { name: string; completedOn: string; title?: string | null; pdf?: boolean }
 
 // The sample shown on the home page; every real ID is checked with the server.
 const SAMPLE: Record<string, Issued> = { YPM0000000: { name: 'Sample Learner', completedOn: '02/03/26' } }
@@ -25,8 +25,8 @@ export default function Verify() {
     queryFn: async (): Promise<Issued | null> => {
       if (SAMPLE[checked]) return SAMPLE[checked]
       try {
-        const r = await api<{ name: string; title: string | null; completedAt: number }>(`/api/certificate/${encodeURIComponent(checked)}`)
-        return { name: r.name, title: r.title, completedOn: certDate(r.completedAt) }
+        const r = await api<{ name: string; title: string | null; completedAt: number; pdf: boolean }>(`/api/certificate/${encodeURIComponent(checked)}`)
+        return { name: r.name, title: r.title, completedOn: certDate(r.completedAt), pdf: r.pdf }
       } catch (err) {
         if (err instanceof ApiError && err.status === 404) return null
         throw err
@@ -99,17 +99,29 @@ export default function Verify() {
                 </div>
               ))}
             </dl>
-            <div className="mt-8 print:mt-0">
-              <CertificateCard unlocked name={record.name} completedOn={record.completedOn} certificateId={checked} programme={record.title} />
-            </div>
-            {/* The browser's print dialog → Save as PDF; everything but the card is print:hidden. */}
-            {!SAMPLE[checked] && (
-              <div className="mt-6 flex flex-wrap items-center gap-4 print:hidden">
-                <button type="button" onClick={() => window.print()} className="btn-primary">
+            {record.pdf ? (
+              // Issued as Khushbu's own PDF: show and download that file.
+              <>
+                <iframe src={`/api/certificate/${checked}/pdf#view=FitH&navpanes=0`} title={`Certificate ${checked}`} className="mt-8 aspect-[1.414/1] w-full rounded-xl bg-white" />
+                <a href={`/api/certificate/${checked}/pdf`} download={`YPM-certificate-${checked}.pdf`} className="btn-primary mt-6">
                   <Download size={16} /> Download PDF
-                </button>
-                <span className="text-sm text-white/45">Choose “Save as PDF” and landscape in the print dialog.</span>
-              </div>
+                </a>
+              </>
+            ) : (
+              <>
+                <div className="mt-8 print:mt-0">
+                  <CertificateCard unlocked name={record.name} completedOn={record.completedOn} certificateId={checked} programme={record.title} />
+                </div>
+                {/* The browser's print dialog → Save as PDF; everything but the card is print:hidden. */}
+                {!SAMPLE[checked] && (
+                  <div className="mt-6 flex flex-wrap items-center gap-4 print:hidden">
+                    <button type="button" onClick={() => window.print()} className="btn-primary">
+                      <Download size={16} /> Download PDF
+                    </button>
+                    <span className="text-sm text-white/45">Choose “Save as PDF” and landscape in the print dialog.</span>
+                  </div>
+                )}
+              </>
             )}
           </div>
         )}

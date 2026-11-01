@@ -146,6 +146,6 @@ details summary::-webkit-details-marker {
   .crisp-client { display: none !important; }
   @page { size: landscape; margin: 10mm; }
   /* The certificate prints on white paper, and keeps its gold and violet even with "Background graphics" off. */
-  html, body, #root > div { background: #fff !important; }
+  html, body, #root > div { background: #fff !important; min-height: 0 !important; }
   * { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
 }

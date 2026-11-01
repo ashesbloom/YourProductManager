@@ -12,7 +12,7 @@ import {
   SESSION_IDLE_MS,
   sessionCookie,
 } from './http.ts'
-import { certificateFor } from './student.ts'
+import { certificateFor, hasPdf } from './student.ts'
 import { isEmail, randomCode, randomToken, safeNext, sha256Hex } from './lib.ts'
 
 const MIN = 60_000
@@ -267,6 +267,6 @@ export async function me(req: Request, env: Env): Promise<Response> {
   return json({
     user: { email: session.email, name: session.name, isAdmin: !!admin?.is_admin },
     enrollments: results.map((r) => r.course_id),
-    certificate: cert && { id: cert.id, title: cert.title, completedAt: cert.completedAt },
+    certificate: cert && { id: cert.id, title: cert.title, completedAt: cert.completedAt, pdf: await hasPdf(env, cert.id) },
   })
 }

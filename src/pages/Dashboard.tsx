@@ -90,12 +90,22 @@ function CertificateSection({ me }: { me: Me }) {
           </p>
           {!name && <p className="mt-2 text-sm text-accent">Add your name under Profile so it appears on the certificate.</p>}
           <div className="mt-6 max-w-xl">
-            <CertificateCard unlocked name={name} completedOn={certDate(cert.completedAt)} certificateId={cert.id} programme={cert.title} />
+            {cert.pdf ? (
+              <iframe src={`/api/certificate/${cert.id}/pdf#view=FitH&navpanes=0`} title="Your certificate" className="aspect-[1.414/1] w-full rounded-xl bg-white" />
+            ) : (
+              <CertificateCard unlocked name={name} completedOn={certDate(cert.completedAt)} certificateId={cert.id} programme={cert.title} />
+            )}
           </div>
           <div className="mt-6 flex flex-wrap gap-3">
-            <Link to="/certificate" className={btnPrimary}>
-              <Download size={16} /> Download PDF
-            </Link>
+            {cert.pdf ? (
+              <a href={`/api/certificate/${cert.id}/pdf`} download={`YPM-certificate-${cert.id}.pdf`} className={btnPrimary}>
+                <Download size={16} /> Download PDF
+              </a>
+            ) : (
+              <Link to="/certificate" className={btnPrimary}>
+                <Download size={16} /> Download PDF
+              </Link>
+            )}
             <Link to={`/verify?id=${cert.id}`} className="btn-secondary">
               Verify link
             </Link>

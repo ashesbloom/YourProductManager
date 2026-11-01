@@ -10,6 +10,8 @@ type CertificateCardProps = {
   completedOn?: string
   certificateId?: string
   programme?: string | null
+  /** Changes after a new signature upload, so the card re-fetches it. */
+  signatureVersion?: number
 }
 
 // Khushbu's certificate design with its placeholder text removed; the live fields are laid over it.
@@ -30,7 +32,9 @@ export function CertificateCard({
   completedOn = 'DD/MM/YY',
   certificateId = 'YPM0000000',
   programme,
+  signatureVersion,
 }: CertificateCardProps) {
+  const [noSignature, setNoSignature] = useState(false)
   const cardRef = useRef<HTMLDivElement>(null)
   const [tilt, setTilt] = useState({ x: 0, y: 0 })
   const reduceMotion = useReducedMotion()
@@ -48,7 +52,8 @@ export function CertificateCard({
   }
 
   return (
-    <div className="[perspective:1400px]">
+    // In print: one landscape page. Full width, capped at 262mm so its height fits A4 (190mm usable) and Letter.
+    <div className="[perspective:1400px] print:mx-auto print:w-full print:max-w-[262mm]">
       <div
         ref={cardRef}
         onMouseMove={handleMove}
@@ -68,9 +73,20 @@ export function CertificateCard({
         <Field x={26.5} y={72.9} className="text-[1.45cqw] tabular-nums">
           {completedOn}
         </Field>
-        <Field x={49.7} y={72.5} className="font-['Playfair_Display'] text-[2.1cqw] italic">
-          Khushbu
-        </Field>
+        {/* The uploaded signature (Admin → Certificates) sits on the rule; until there is one, her name in script. */}
+        {noSignature ? (
+          <Field x={49.7} y={72.5} className="font-['Playfair_Display'] text-[2.1cqw] italic">
+            Khushbu
+          </Field>
+        ) : (
+          <img
+            src={`/api/signature${signatureVersion ? `?v=${signatureVersion}` : ''}`}
+            alt="Signature"
+            draggable={false}
+            onError={() => setNoSignature(true)}
+            className="absolute bottom-[24.4%] left-[49.7%] h-[6cqw] max-w-[17cqw] -translate-x-1/2 select-none object-contain object-bottom"
+          />
+        )}
         <Field x={75.75} y={72.9} className="text-[1.45cqw] tabular-nums">
           {certificateId}
         </Field>

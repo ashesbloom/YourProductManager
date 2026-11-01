@@ -3,7 +3,20 @@ import { contact } from './email.ts'
 import { HttpError, json } from './http.ts'
 import { getProgress, media, saveProgress } from './media.ts'
 import { checkout, checkoutVerify, webhook } from './pay.ts'
-import { adminCoaching, adminEmailCertificate, adminIssueCertificate, adminStatsRoute, saveProfile, verifyCertificate } from './student.ts'
+import {
+  adminCoaching,
+  adminDeleteSignature,
+  adminEmailCertificate,
+  adminIssueCertificate,
+  adminRemoveCertificatePdf,
+  adminStatsRoute,
+  adminUploadCertificatePdf,
+  adminUploadSignature,
+  certificatePdf,
+  saveProfile,
+  signatureImage,
+  verifyCertificate,
+} from './student.ts'
 
 export default {
   async fetch(req, env, ctx): Promise<Response> {
@@ -14,8 +27,12 @@ export default {
         return await getProgress(req, env, url.pathname.slice('/api/progress/'.length))
       }
       if (req.method === 'GET' && url.pathname.startsWith('/api/certificate/')) {
-        return await verifyCertificate(env, url.pathname.slice('/api/certificate/'.length))
+        const rest = url.pathname.slice('/api/certificate/'.length)
+        return rest.endsWith('/pdf') ? await certificatePdf(env, rest.slice(0, -'/pdf'.length)) : await verifyCertificate(env, rest)
       }
+      const certPdf = /^\/api\/admin\/certificate\/([A-Za-z0-9]+)\/pdf$/.exec(url.pathname)
+      if (certPdf && req.method === 'PUT') return await adminUploadCertificatePdf(req, env, certPdf[1])
+      if (certPdf && req.method === 'DELETE') return await adminRemoveCertificatePdf(req, env, certPdf[1])
       switch (`${req.method} ${url.pathname}`) {
         case 'GET /api/health':
           return json({ ok: true })
@@ -47,6 +64,12 @@ export default {
           return await adminIssueCertificate(req, env)
         case 'POST /api/admin/certificate/email':
           return await adminEmailCertificate(req, env)
+        case 'GET /api/signature':
+          return await signatureImage(env)
+        case 'PUT /api/admin/signature':
+          return await adminUploadSignature(req, env)
+        case 'DELETE /api/admin/signature':
+          return await adminDeleteSignature(req, env)
         case 'POST /api/contact':
           return await contact(req, env)
         case 'POST /api/progress':

@@ -1,7 +1,7 @@
 import { CERTIFICATE_PROGRAMME, courseLectures } from '../src/data/catalog.ts'
 import { sendEmail } from './email.ts'
 import { HttpError, json, readJson, requireSession } from './http.ts'
-import { isEmail } from './lib.ts'
+import { imageType, isEmail, isPdf, toBase64 } from './lib.ts'
 
 // The certificate programme is every AI PM lecture (Foundations is the free bonus). Matched by id
 // prefix rather than an IN list: D1 allows at most 100 bound parameters per query.
@@ -64,6 +64,23 @@ export async function issueCertificate(db: D1Database, input: { email: string; n
 const coachedAt = async (db: D1Database, userId: number) =>
   (await db.prepare(`SELECT coaching_completed_at AS c FROM users WHERE id = ?`).bind(userId).first<{ c: number | null }>())!.c
 
+// Files in R2: Khushbu's own PDF for a certificate (sent and downloaded instead of the site's design),
+// and one signature image printed on every site-drawn certificate.
+const certPdfKey = (id: string) => `certificates/${id}.pdf`
+const SIGNATURE_KEY = 'site/signature'
+const MAX_PDF = 10 * 1024 * 1024
+const MAX_SIGNATURE = 2 * 1024 * 1024
+
+export const hasPdf = async (env: Env, id: string) => (await env.MEDIA.head(certPdfKey(id))) !== null
+
+/** The valid certificate behind a public ID; null when unknown, malformed, withdrawn or refunded. */
+async function certificateById(db: D1Database, raw: string): Promise<Certificate | null> {
+  const id = raw.toUpperCase()
+  if (!/^YPM[A-Z0-9]{8}$/.test(id)) return null
+  const user = await db.prepare(`SELECT id FROM users WHERE cert_id = ?`).bind(id).first<{ id: number }>()
+  return user ? certificateFor(db, user.id) : null
+}
+
 /** True for exactly one caller: the one that gets to send the first "your certificate is ready" email. */
 export async function claimCertificateEmail(db: D1Database, userId: number, now: number): Promise<boolean> {
   const res = await db.prepare(`UPDATE users SET cert_emailed_at = ? WHERE id = ? AND cert_emailed_at IS NULL`).bind(now, userId).run()
@@ -72,13 +89,17 @@ export async function claimCertificateEmail(db: D1Database, userId: number, now:
 
 async function emailCertificate(env: Env, to: string, cert: Certificate, origin: string) {
   const greeting = cert.name ? `Hi ${cert.name},` : 'Hi,'
+  const pdf = await env.MEDIA.get(certPdfKey(cert.id))
   await sendEmail(
     env,
     to,
     'Your YPM certificate',
     `${greeting}\n\nCongratulations! Your certificate for the ${cert.title || CERTIFICATE_PROGRAMME} is ready.\n\n` +
-      `View and download it (PDF): ${origin}/verify?id=${cert.id}\nCertificate ID: ${cert.id}\n\n` +
+      (pdf ? `It is attached to this email as a PDF. You can also open it here: ` : `View and download it (PDF): `) +
+      `${origin}/verify?id=${cert.id}\nCertificate ID: ${cert.id}\n\n` +
       `Anyone can confirm it is genuine at ${origin}/verify.\n\nKhushbu Sharma, YPM`,
+    undefined,
+    pdf ? [{ filename: `YPM-certificate-${cert.id}.pdf`, content: toBase64(new Uint8Array(await pdf.arrayBuffer())) }] : undefined,
   )
 }
 
@@ -94,13 +115,37 @@ export async function notifyCertificate(env: Env, userId: number, origin: string
 
 /** Public: anyone can check a certificate ID. */
 export async function verifyCertificate(env: Env, id: string): Promise<Response> {
-  const user = /^YPM[A-Z0-9]{8}$/.test(id.toUpperCase())
-    ? await env.DB.prepare(`SELECT id FROM users WHERE cert_id = ?`).bind(id.toUpperCase()).first<{ id: number }>()
-    : null
   // Re-checked on every lookup, so a certificate from a refunded course stops verifying.
-  const cert = user ? await certificateFor(env.DB, user.id) : null
+  const cert = await certificateById(env.DB, id)
   if (!cert) return json({ error: 'No certificate with that ID' }, 404)
-  return json({ name: cert.name ?? 'YPM Learner', title: cert.title, completedAt: cert.completedAt })
+  return json({ name: cert.name ?? 'YPM Learner', title: cert.title, completedAt: cert.completedAt, pdf: await hasPdf(env, cert.id) })
+}
+
+/** Public, like verification: the uploaded PDF behind a valid certificate ID. */
+export async function certificatePdf(env: Env, id: string): Promise<Response> {
+  const cert = await certificateById(env.DB, id)
+  const obj = cert && (await env.MEDIA.get(certPdfKey(cert.id)))
+  if (!cert || !obj) return json({ error: 'No certificate PDF with that ID' }, 404)
+  return new Response(obj.body, {
+    headers: {
+      'content-type': 'application/pdf',
+      'content-disposition': `inline; filename="YPM-certificate-${cert.id}.pdf"`,
+      'cache-control': 'no-store', // a withdrawn certificate's PDF must stop being served at once
+    },
+  })
+}
+
+export async function signatureImage(env: Env): Promise<Response> {
+  const obj = await env.MEDIA.get(SIGNATURE_KEY)
+  if (!obj) return json({ error: 'No signature uploaded' }, 404)
+  return new Response(obj.body, { headers: { 'content-type': obj.httpMetadata?.contentType ?? 'image/png', 'cache-control': 'public, max-age=300' } })
+}
+
+async function readUpload(req: Request, max: number): Promise<Uint8Array> {
+  const bytes = new Uint8Array(await req.arrayBuffer())
+  if (!bytes.length) throw new HttpError(400, 'Choose a file to upload')
+  if (bytes.length > max) throw new HttpError(413, `That file is too large (max ${max / 1024 / 1024} MB)`)
+  return bytes
 }
 
 export async function saveProfile(req: Request, env: Env): Promise<Response> {
@@ -207,7 +252,9 @@ export async function adminStats(db: D1Database, now: number) {
 
 export async function adminStatsRoute(req: Request, env: Env): Promise<Response> {
   await requireAdmin(req, env)
-  return json(await adminStats(env.DB, Date.now()))
+  const stats = await adminStats(env.DB, Date.now())
+  const certificates = await Promise.all(stats.certificates.map(async (c) => ({ ...c, pdf: await hasPdf(env, c.id) })))
+  return json({ ...stats, certificates })
 }
 
 /** Marks (or unmarks) the 1:1 Coaching Programme complete, which issues the certificate. */
@@ -257,5 +304,37 @@ export async function adminEmailCertificate(req: Request, env: Env): Promise<Res
   if (!user || !cert) throw new HttpError(404, 'That email has no certificate')
   await emailCertificate(env, email, cert, new URL(req.url).origin)
   await env.DB.prepare(`UPDATE users SET cert_emailed_at = ? WHERE id = ?`).bind(Date.now(), user.id).run()
+  return json({ ok: true })
+}
+
+export async function adminUploadCertificatePdf(req: Request, env: Env, id: string): Promise<Response> {
+  await requireAdmin(req, env)
+  const cert = await certificateById(env.DB, id)
+  if (!cert) throw new HttpError(404, 'No certificate with that ID')
+  const bytes = await readUpload(req, MAX_PDF)
+  if (!isPdf(bytes)) throw new HttpError(400, 'That file is not a PDF')
+  await env.MEDIA.put(certPdfKey(cert.id), bytes, { httpMetadata: { contentType: 'application/pdf' } })
+  return json({ ok: true })
+}
+
+/** Back to the site's own design for that certificate. */
+export async function adminRemoveCertificatePdf(req: Request, env: Env, id: string): Promise<Response> {
+  await requireAdmin(req, env)
+  await env.MEDIA.delete(certPdfKey(id.toUpperCase()))
+  return json({ ok: true })
+}
+
+export async function adminUploadSignature(req: Request, env: Env): Promise<Response> {
+  await requireAdmin(req, env)
+  const bytes = await readUpload(req, MAX_SIGNATURE)
+  const type = imageType(bytes)
+  if (!type) throw new HttpError(400, 'Upload a PNG, JPG or WebP image')
+  await env.MEDIA.put(SIGNATURE_KEY, bytes, { httpMetadata: { contentType: type } })
+  return json({ ok: true })
+}
+
+export async function adminDeleteSignature(req: Request, env: Env): Promise<Response> {
+  await requireAdmin(req, env)
+  await env.MEDIA.delete(SIGNATURE_KEY)
   return json({ ok: true })
 }
