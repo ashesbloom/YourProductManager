@@ -1,5 +1,4 @@
-// TODO: replace with the live Calendly event.
-export const CALENDLY_URL = 'https://calendly.com/REPLACE_ME/mock-interview'
+export const CALENDLY_URL = 'https://calendly.com/khushbusharmabb'
 export const PHONE = '+91 70182 26776' // Khushbu's WhatsApp
 export const whatsappLink = (text: string) => `https://wa.me/${PHONE.replace(/\D/g, '')}?text=${encodeURIComponent(text)}`
 export const WHATSAPP_URL = whatsappLink('Hi, I have a question about YPM')
