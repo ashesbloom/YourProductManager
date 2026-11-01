@@ -90,7 +90,7 @@ function CertificateSection({ me }: { me: Me }) {
           </p>
           {!name && <p className="mt-2 text-sm text-accent">Add your name under Profile so it appears on the certificate.</p>}
           <div className="mt-6 max-w-xl">
-            <CertificateCard unlocked name={name} completedOn={certDate(cert.completedAt)} certificateId={cert.id} />
+            <CertificateCard unlocked name={name} completedOn={certDate(cert.completedAt)} certificateId={cert.id} programme={cert.title} />
           </div>
           <div className="mt-6 flex flex-wrap gap-3">
             <Link to="/certificate" className={btnPrimary}>

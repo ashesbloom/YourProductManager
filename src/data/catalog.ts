@@ -124,6 +124,9 @@ export const PRODUCTS: Record<string, Product> = {
 }
 
 /** What the AI Product Management purchase includes. Shown on the home course card and the courses page. */
+// The programme printed on a certificate unless an admin issues one with its own.
+export const CERTIFICATE_PROGRAMME = 'Product Management Training Program'
+
 export const COURSE_INCLUDED: Array<{ strong?: string; text: string }> = [
   { strong: '3 AI product', text: 'case study assignments' },
   { strong: '2-hour free', text: 'mock interview session' },

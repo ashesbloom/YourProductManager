@@ -368,7 +368,7 @@ test('pay: a failure while revoking leaves the refund retryable', async () => {
   assert.equal(n, 1)
 })
 
-import { adminStats, certificateFor, PROGRAMME_SIZE } from './student.ts'
+import { adminStats, certificateFor, claimCertificateEmail, issueCertificate, PROGRAMME_SIZE } from './student.ts'
 test('certificate: all AI PM lectures while enrolled, OR 1:1 coaching marked complete', async () => {
   const db = testDb()
   const { id: uid } = await upsertUser(db, { email: 'a@b.co', name: 'Asha' }, 0)
@@ -382,8 +382,10 @@ test('certificate: all AI PM lectures while enrolled, OR 1:1 coaching marked com
   await complete(PROGRAMME_SIZE, 500)
   const cert = await certificateFor(db, uid)
   assert.match(cert!.id, /^YPM[A-Z2-9]{8}$/)
-  assert.deepEqual(cert, { id: cert!.id, name: 'Asha', completedAt: 500 })
+  assert.deepEqual(cert, { id: cert!.id, name: 'Asha', title: null, completedAt: 500 })
   assert.equal((await certificateFor(db, uid))!.id, cert!.id) // stable once issued
+  await issueCertificate(db, { email: 'a@b.co', name: 'Asha Rao', title: null }, 550) // admin fixes the name
+  assert.equal((await certificateFor(db, uid))!.name, 'Asha Rao')
   await refund(db, 'pay_A', 600)
   assert.equal(await certificateFor(db, uid), null) // refunded: the course route no longer counts
   await db.prepare(`UPDATE users SET coaching_completed_at = 700 WHERE id = ?`).bind(uid).run()
@@ -412,4 +414,16 @@ test('admin stats: students, progress, completion and the 30-day series', async 
   assert.equal(s.revenue.orders, 2)
   assert.equal(s.daily.length, 30)
   assert.equal(s.daily.reduce((n, d) => n + d.enrollments, 0), 2)
+})
+
+test('certificate: admin issue creates the account, re-issue only edits; the automatic email goes once', async () => {
+  const db = testDb()
+  const first = await issueCertificate(db, { email: 'new@b.co', name: 'Ravi K', title: '1:1 Coaching Programme' }, 100)
+  assert.deepEqual(first.certificate, { id: first.certificate.id, name: 'Ravi K', title: '1:1 Coaching Programme', completedAt: 100 })
+  const again = await issueCertificate(db, { email: 'new@b.co', name: 'Ravi Kumar', title: null }, 200)
+  assert.equal(again.userId, first.userId)
+  assert.deepEqual(again.certificate, { id: first.certificate.id, name: 'Ravi Kumar', title: null, completedAt: 100 }) // same ID and date
+  assert.equal((await adminStats(db, 300)).certificates.length, 1)
+  assert.equal(await claimCertificateEmail(db, first.userId, 300), true)
+  assert.equal(await claimCertificateEmail(db, first.userId, 301), false)
 })

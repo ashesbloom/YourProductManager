@@ -2,12 +2,14 @@ import { useRef, useState } from 'react'
 import { useReducedMotion } from 'framer-motion'
 import { Lock } from 'lucide-react'
 import { Logo } from './Logo'
+import { CERTIFICATE_PROGRAMME } from '@/data/catalog'
 
 type CertificateCardProps = {
   unlocked: boolean
   name?: string
   completedOn?: string
   certificateId?: string
+  programme?: string | null
 }
 
 const GOLD = 'linear-gradient(135deg,#B8860B 0%,#E8CC72 45%,#C9A227 100%)'
@@ -22,6 +24,7 @@ export function CertificateCard({
   name = 'Name',
   completedOn = 'DD/MM/YY',
   certificateId = 'YPM0000000',
+  programme,
 }: CertificateCardProps) {
   const cardRef = useRef<HTMLDivElement>(null)
   const [tilt, setTilt] = useState({ x: 0, y: 0 })
@@ -44,7 +47,7 @@ export function CertificateCard({
         ref={cardRef}
         onMouseMove={handleMove}
         onMouseLeave={() => setTilt({ x: 0, y: 0 })}
-        className="group relative aspect-[1.414/1] w-full overflow-hidden shadow-[0_30px_70px_-25px_rgba(0,0,0,0.8)] [container-type:inline-size] transition-transform duration-300 ease-out"
+        className="group relative aspect-[1.414/1] w-full overflow-hidden shadow-[0_30px_70px_-25px_rgba(0,0,0,0.8)] print:shadow-none [container-type:inline-size] transition-transform duration-300 ease-out"
         style={{
           transform: `rotateX(${tilt.x}deg) rotateY(${tilt.y}deg)`,
           background: 'linear-gradient(135deg,#EFF0F3 0%,#FDFDFE 38%,#F2F3F6 100%)',
@@ -139,7 +142,7 @@ export function CertificateCard({
             <GoldRule className="mx-auto mt-[1.3cqw] h-[0.22cqw] w-[56cqw]" />
 
             <p className="mt-[2cqw] text-[1.75cqw]">has successfully completed the</p>
-            <p className="mt-[1.3cqw] text-[2.5cqw] font-bold">Product Management Training Program</p>
+            <p className="mt-[1.3cqw] text-[2.5cqw] font-bold">{programme || CERTIFICATE_PROGRAMME}</p>
             <p className="mt-[1.3cqw] text-[1.75cqw]">at Your Product Manager (YPM).</p>
           </div>
 

@@ -11,7 +11,7 @@ export default function Certificate() {
   if (isPending) return <div className="min-h-[60vh] bg-black" />
   if (!me?.user) return <Navigate to="/login?next=/certificate" replace />
   if (!me.certificate) return <Navigate to="/dashboard#certificate" replace />
-  const { id, completedAt } = me.certificate
+  const { id, title, completedAt } = me.certificate
 
   return (
     <div className="bg-black px-4 pb-24 pt-[calc(var(--header-h)+2rem)] text-white print:bg-white print:p-0">
@@ -24,7 +24,7 @@ export default function Certificate() {
             <Download size={16} /> Download PDF
           </button>
         </div>
-        <CertificateCard unlocked name={me.user.name ?? undefined} completedOn={certDate(completedAt)} certificateId={id} />
+        <CertificateCard unlocked name={me.user.name ?? undefined} completedOn={certDate(completedAt)} certificateId={id} programme={title} />
         <p className="mt-6 text-center text-sm text-white/45 print:hidden">
           In the print dialog, choose “Save as PDF” and landscape orientation.
         </p>

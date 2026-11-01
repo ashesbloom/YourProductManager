@@ -3,10 +3,10 @@ import { useSearchParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { api, ApiError } from '@/lib/api'
 import { certDate } from '@/lib/me'
-import { BadgeCheck, SearchX, ShieldCheck } from 'lucide-react'
+import { BadgeCheck, Download, SearchX, ShieldCheck } from 'lucide-react'
 import { CertificateCard } from '@/components/CertificateCard'
 
-type Issued = { name: string; completedOn: string }
+type Issued = { name: string; completedOn: string; title?: string | null }
 
 // The sample shown on the home page; every real ID is checked with the server.
 const SAMPLE: Record<string, Issued> = { YPM0000000: { name: 'Sample Learner', completedOn: '02/03/26' } }
@@ -25,8 +25,8 @@ export default function Verify() {
     queryFn: async (): Promise<Issued | null> => {
       if (SAMPLE[checked]) return SAMPLE[checked]
       try {
-        const r = await api<{ name: string; completedAt: number }>(`/api/certificate/${encodeURIComponent(checked)}`)
-        return { name: r.name, completedOn: certDate(r.completedAt) }
+        const r = await api<{ name: string; title: string | null; completedAt: number }>(`/api/certificate/${encodeURIComponent(checked)}`)
+        return { name: r.name, title: r.title, completedOn: certDate(r.completedAt) }
       } catch (err) {
         if (err instanceof ApiError && err.status === 404) return null
         throw err
@@ -35,8 +35,8 @@ export default function Verify() {
   })
 
   return (
-    <div className="bg-black px-4 pt-32 pb-24 text-white">
-      <div className="relative mx-auto max-w-3xl text-center">
+    <div className="bg-black px-4 pt-32 pb-24 text-white print:bg-white print:p-0">
+      <div className="relative mx-auto max-w-3xl text-center print:hidden">
         <div className="pointer-events-none absolute left-1/2 -top-10 h-80 w-80 -translate-x-1/2 rounded-full bg-primary/15 blur-3xl" />
         <div data-reveal className="relative">
           <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-brand shadow-[0_0_40px_-8px_rgba(124,58,237,0.8)]">
@@ -82,12 +82,12 @@ export default function Verify() {
 
       <div className="mx-auto mt-12 max-w-3xl" aria-live="polite">
         {checked && record && (
-          <div className="rounded-3xl border border-emerald-400/30 bg-emerald-400/5 p-6 md:p-8">
-            <div className="flex items-center gap-x-3 text-emerald-300">
+          <div className="rounded-3xl border border-emerald-400/30 bg-emerald-400/5 p-6 md:p-8 print:border-0 print:bg-transparent print:p-0">
+            <div className="flex items-center gap-x-3 text-emerald-300 print:hidden">
               <BadgeCheck size={22} />
               <span className="font-bold">Verified — this certificate is authentic.</span>
             </div>
-            <dl className="mt-5 grid sm:grid-cols-3 gap-x-6 gap-y-4 text-left">
+            <dl className="mt-5 grid sm:grid-cols-3 gap-x-6 gap-y-4 text-left print:hidden">
               {[
                 ['Issued to', record.name],
                 ['Completed on', record.completedOn],
@@ -99,14 +99,23 @@ export default function Verify() {
                 </div>
               ))}
             </dl>
-            <div className="mt-8">
-              <CertificateCard unlocked name={record.name} completedOn={record.completedOn} certificateId={checked} />
+            <div className="mt-8 print:mt-0">
+              <CertificateCard unlocked name={record.name} completedOn={record.completedOn} certificateId={checked} programme={record.title} />
             </div>
+            {/* The browser's print dialog → Save as PDF; everything but the card is print:hidden. */}
+            {!SAMPLE[checked] && (
+              <div className="mt-6 flex flex-wrap items-center gap-4 print:hidden">
+                <button type="button" onClick={() => window.print()} className="btn-primary">
+                  <Download size={16} /> Download PDF
+                </button>
+                <span className="text-sm text-white/45">Choose “Save as PDF” and landscape in the print dialog.</span>
+              </div>
+            )}
           </div>
         )}
 
         {checked && record === null && !isFetching && (
-          <div className="rounded-3xl border border-red-400/30 bg-red-400/5 p-6 text-center md:p-8">
+          <div className="rounded-3xl border border-red-400/30 bg-red-400/5 p-6 text-center md:p-8 print:hidden">
             <SearchX size={26} className="mx-auto text-red-300" />
             <p className="mt-3 font-bold text-red-200">No certificate found for “{checked}”.</p>
             <p className="mt-2 text-sm text-white/55">
@@ -116,7 +125,7 @@ export default function Verify() {
         )}
       </div>
 
-      <p className="mx-auto mt-12 max-w-xl text-center text-xs text-white/40">
+      <p className="mx-auto mt-12 max-w-xl text-center text-xs text-white/40 print:hidden">
         Verification confirms authenticity but does not imply employment guarantee.
       </p>
     </div>

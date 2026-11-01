@@ -3,7 +3,7 @@ import { contact } from './email.ts'
 import { HttpError, json } from './http.ts'
 import { getProgress, media, saveProgress } from './media.ts'
 import { checkout, checkoutVerify, webhook } from './pay.ts'
-import { adminCoaching, adminStatsRoute, saveProfile, verifyCertificate } from './student.ts'
+import { adminCoaching, adminEmailCertificate, adminIssueCertificate, adminStatsRoute, saveProfile, verifyCertificate } from './student.ts'
 
 export default {
   async fetch(req, env, ctx): Promise<Response> {
@@ -43,10 +43,14 @@ export default {
           return await adminStatsRoute(req, env)
         case 'POST /api/admin/coaching':
           return await adminCoaching(req, env)
+        case 'POST /api/admin/certificate':
+          return await adminIssueCertificate(req, env)
+        case 'POST /api/admin/certificate/email':
+          return await adminEmailCertificate(req, env)
         case 'POST /api/contact':
           return await contact(req, env)
         case 'POST /api/progress':
-          return await saveProgress(req, env)
+          return await saveProgress(req, env, ctx)
       }
       return json({ error: 'Not found' }, 404)
     } catch (err) {

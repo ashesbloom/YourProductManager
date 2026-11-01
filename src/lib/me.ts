@@ -4,7 +4,7 @@ import { courseLectures, type Lecture } from '@/data/catalog'
 export type Me = {
   user: { email: string; name: string | null; isAdmin: boolean } | null
   enrollments: string[]
-  certificate?: { id: string; completedAt: number } | null
+  certificate?: { id: string; title: string | null; completedAt: number } | null
 }
 
 /** DD/MM/YY, as printed on the certificate. */

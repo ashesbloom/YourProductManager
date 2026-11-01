@@ -2,6 +2,7 @@ import { COMPLETE_PCT, COURSES, LECTURES, lookup } from '../src/data/catalog.ts'
 import { bucketCount, countHex, isHexBitmap, orHex } from '../src/lib/bitmap.ts'
 import { getCookie, HttpError, json, readJson, requireSession, SESSION_COOKIE } from './http.ts'
 import { CONTENT_TYPES, mediaKey, sha256Hex } from './lib.ts'
+import { notifyCertificate, PROGRAMME } from './student.ts'
 
 type TrackedLecture = { id: string; courseId: string; durationS: number; free: boolean }
 
@@ -93,14 +94,22 @@ export async function media(req: Request, env: Env, pathname: string): Promise<R
   })
 }
 
-export async function saveProgress(req: Request, env: Env): Promise<Response> {
+export async function saveProgress(req: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
   const session = await requireSession(req, env)
   const { lecture, positionS, watched } = parseProgress(await readJson(req))
   const now = Date.now()
   if (!lecture.free && !(await hasAccess(env.DB, session.sid, lecture.courseId, now))) {
     throw new HttpError(403, 'No access to this lecture')
   }
-  return json(await recordProgress(env.DB, session.userId, lecture, positionS, watched, now))
+  const result = await recordProgress(env.DB, session.userId, lecture, positionS, watched, now)
+  if (result.completed && lecture.courseId === PROGRAMME) {
+    ctx.waitUntil(
+      notifyCertificate(env, session.userId, new URL(req.url).origin, now).catch((err) =>
+        console.error(JSON.stringify({ msg: 'certificate email failed', userId: session.userId, err: String(err) })),
+      ),
+    )
+  }
+  return json(result)
 }
 
 export async function getProgress(req: Request, env: Env, courseId: string): Promise<Response> {

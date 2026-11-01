@@ -267,6 +267,6 @@ export async function me(req: Request, env: Env): Promise<Response> {
   return json({
     user: { email: session.email, name: session.name, isAdmin: !!admin?.is_admin },
     enrollments: results.map((r) => r.course_id),
-    certificate: cert && { id: cert.id, completedAt: cert.completedAt },
+    certificate: cert && { id: cert.id, title: cert.title, completedAt: cert.completedAt },
   })
 }
