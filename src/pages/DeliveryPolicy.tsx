@@ -1,3 +1,4 @@
+import { SUPPORT_EMAIL } from '@/lib/links'
 import { LegalPage, type LegalSection } from '@/components/LegalPage'
 
 const SECTIONS: LegalSection[] = [
@@ -17,7 +18,7 @@ const SECTIONS: LegalSection[] = [
   {
     heading: 'Delays',
     body: [
-      'If your payment succeeded but the course does not appear in your dashboard within 24 hours, write to us with your registered email address and payment reference and we will resolve it.',
+      `If your payment succeeded but the course does not appear in your dashboard within 24 hours, write to ${SUPPORT_EMAIL} with your registered email address and payment reference and we will resolve it.`,
     ],
   },
   {

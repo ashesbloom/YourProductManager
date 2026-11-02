@@ -1,3 +1,4 @@
+import { SUPPORT_EMAIL } from '@/lib/links'
 import { LegalPage, type LegalSection } from '@/components/LegalPage'
 
 const SECTIONS: LegalSection[] = [
@@ -49,7 +50,7 @@ const SECTIONS: LegalSection[] = [
   {
     heading: 'Your Rights and Choices',
     body: [
-      'You have the right to request access to the personal information we hold about you, request corrections to inaccurate information, or ask for deletion of your data, subject to applicable legal requirements. To exercise these rights, you may contact us through the official communication channels listed on our website.',
+      `You have the right to request access to the personal information we hold about you, request corrections to inaccurate information, or ask for deletion of your data, subject to applicable legal requirements. To exercise these rights, write to ${SUPPORT_EMAIL}.`,
     ],
   },
   {

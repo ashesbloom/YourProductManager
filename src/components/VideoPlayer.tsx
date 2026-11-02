@@ -22,7 +22,9 @@ export function VideoPlayer({
   onPlay?: () => void
 }) {
   const ref = useRef<HTMLVideoElement>(null)
+  const boxRef = useRef<HTMLDivElement>(null)
   const [error, setError] = useState('')
+  const [mark, setMark] = useState({ left: 8, top: 10 })
   const startAtRef = useRef(startAt)
   const onProgressRef = useRef(onProgress)
   useEffect(() => {
@@ -115,21 +117,45 @@ export function VideoPlayer({
     }
   }, [lectureId, durationS])
 
+  // The watermark wanders, so a screen recording can't crop or blur it out, and it names the account that leaked it.
+  useEffect(() => {
+    if (!watermark) return
+    const move = () => setMark({ left: 5 + Math.random() * 55, top: 6 + Math.random() * 78 })
+    const timer = setInterval(move, 15_000)
+    return () => clearInterval(timer)
+  }, [watermark])
+
+  // The player's fullscreen button fullscreens the bare <video>, which would hide the watermark. Swap in this
+  // whole box instead. ponytail: iPhone Safari only has its native fullscreen player, so the mark can't follow there.
+  useEffect(() => {
+    const onChange = () => {
+      if (document.fullscreenElement === ref.current) void document.exitFullscreen().then(() => boxRef.current?.requestFullscreen())
+    }
+    document.addEventListener('fullscreenchange', onChange)
+    return () => document.removeEventListener('fullscreenchange', onChange)
+  }, [])
+
   return (
-    <div className="relative aspect-video w-full overflow-hidden rounded-xl bg-black">
+    <div ref={boxRef} className="relative aspect-video w-full overflow-hidden rounded-xl bg-black [&:fullscreen]:rounded-none">
       <video
         ref={ref}
         className="h-full w-full"
         controls
         playsInline
-        controlsList="nodownload"
+        controlsList="nodownload noremoteplayback"
         disablePictureInPicture
+        disableRemotePlayback
         onContextMenu={(e) => e.preventDefault()}
         onPlay={onPlay}
       />
-      {/* Deterrent against re-sharing screen recordings. ponytail: hidden in native fullscreen; a custom fullscreen container would keep it. */}
       {watermark ? (
-        <span className="pointer-events-none absolute right-3 top-3 select-none text-xs text-white/25">{watermark}</span>
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute select-none whitespace-nowrap text-xs font-medium text-white/30 transition-[left,top] duration-[2000ms] ease-in-out sm:text-sm"
+          style={{ left: `${mark.left}%`, top: `${mark.top}%`, textShadow: '0 1px 2px rgba(0,0,0,0.6)' }}
+        >
+          {watermark}
+        </span>
       ) : null}
       {error ? (
         <div role="alert" className="absolute inset-0 flex items-center justify-center bg-black/85 p-6 text-center text-sm text-white/80">

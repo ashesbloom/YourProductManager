@@ -5,6 +5,7 @@ import { api, ApiError } from '@/lib/api'
 import { certDate } from '@/lib/me'
 import { BadgeCheck, Download, SearchX, ShieldCheck } from 'lucide-react'
 import { CertificateCard } from '@/components/CertificateCard'
+import { SUPPORT_EMAIL } from '@/lib/links'
 
 type Issued = { name: string; completedOn: string; title?: string | null; pdf?: boolean }
 
@@ -131,7 +132,7 @@ export default function Verify() {
             <SearchX size={26} className="mx-auto text-red-300" />
             <p className="mt-3 font-bold text-red-200">No certificate found for “{checked}”.</p>
             <p className="mt-2 text-sm text-white/55">
-              Check the ID for typos. If it still doesn't match, contact us and we'll look into it.
+              Check the ID for typos. If it still doesn't match, write to {SUPPORT_EMAIL} and we'll look into it.
             </p>
           </div>
         )}

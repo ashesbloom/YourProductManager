@@ -1,3 +1,4 @@
+import { SUPPORT_EMAIL } from '@/lib/links'
 import { LegalPage, type LegalSection } from '@/components/LegalPage'
 
 const SECTIONS: LegalSection[] = [
@@ -11,7 +12,7 @@ const SECTIONS: LegalSection[] = [
   {
     heading: 'Duplicate or Unfulfilled Payments',
     body: [
-      'If you were charged more than once for the same course, or your payment succeeded but you did not receive access, write to us with your registered email address and payment reference. Verified duplicate or unfulfilled payments are refunded in full.',
+      `If you were charged more than once for the same course, or your payment succeeded but you did not receive access, write to ${SUPPORT_EMAIL} with your registered email address and payment reference. Verified duplicate or unfulfilled payments are refunded in full.`,
     ],
   },
   {

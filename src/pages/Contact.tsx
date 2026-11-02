@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { api, ApiError } from '@/lib/api'
 import { ArrowUpRight, Calendar, Mail, MessageCircle, Send } from 'lucide-react'
-import { CALENDLY_URL, PHONE, SUPPORT_EMAIL, WHATSAPP_URL } from '@/lib/links'
+import { CALENDLY_URL, CONTACT_EMAIL, PHONE, SUPPORT_EMAIL, WHATSAPP_URL } from '@/lib/links'
 
 const CHANNELS = [
   {
@@ -24,9 +24,9 @@ const CHANNELS = [
   {
     icon: Mail,
     title: 'Email',
-    body: `Write to ${SUPPORT_EMAIL}. We respond within 24–48 hours.`,
+    body: `${CONTACT_EMAIL} for coaching, mock interviews and partnerships. Already enrolled? ${SUPPORT_EMAIL} for access, payments and certificates. We reply within 24–48 hours.`,
     cta: 'Send an email',
-    href: `mailto:${SUPPORT_EMAIL}`,
+    href: `mailto:${CONTACT_EMAIL}`,
     featured: false,
   },
 ]
@@ -111,7 +111,7 @@ export default function Contact() {
                   form.reset()
                   setStatus('sent')
                 } catch (err) {
-                  setStatus(err instanceof ApiError ? err.message : 'Could not send. Please email us directly.')
+                  setStatus(err instanceof ApiError ? err.message : `Could not send. Please email ${CONTACT_EMAIL} directly.`)
                 }
               }}
             >

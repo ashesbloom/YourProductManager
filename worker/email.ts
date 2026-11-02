@@ -1,4 +1,4 @@
-import { SUPPORT_EMAIL } from '../src/lib/links.ts'
+import { CONTACT_EMAIL, SUPPORT_EMAIL } from '../src/lib/links.ts'
 import { HttpError, json, readJson } from './http.ts'
 import { isEmail } from './lib.ts'
 
@@ -7,7 +7,7 @@ export async function sendEmail(
   to: string,
   subject: string,
   text: string,
-  replyTo?: string,
+  replyTo = SUPPORT_EMAIL, // mail comes from no-reply@, so a student's reply lands with support
   attachments?: Array<{ filename: string; content: string }>, // content is base64
 ): Promise<void> {
   if (!env.RESEND_API_KEY) {
@@ -52,6 +52,6 @@ export async function contact(req: Request, env: Env): Promise<Response> {
     .bind(JSON.stringify({ topic }), now, now - 3_600_000, CONTACT_PER_HOUR)
     .run()
   if (!slot.meta.changes) throw new HttpError(429, `Too many messages right now. Please email ${SUPPORT_EMAIL} directly.`)
-  await sendEmail(env, SUPPORT_EMAIL, `[${topic}] Enquiry from ${name}`, `${message}\n\n— ${name} <${email}>`, email)
+  await sendEmail(env, topic === 'Courses' ? SUPPORT_EMAIL : CONTACT_EMAIL, `[${topic}] Enquiry from ${name}`, `${message}\n\n— ${name} <${email}>`, email)
   return json({ ok: true })
 }

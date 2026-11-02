@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import { ArrowUpRight, Instagram, Linkedin, Mail, MessageCircle, Phone, Youtube } from 'lucide-react'
 import { Logo } from '@/components/Logo'
-import { CALENDLY_URL, SUPPORT_EMAIL, WHATSAPP_URL } from '@/lib/links'
+import { CALENDLY_URL, HELLO_EMAIL, SUPPORT_EMAIL, WHATSAPP_URL } from '@/lib/links'
 
 const columns = [
   {
@@ -103,6 +103,12 @@ export function Footer() {
                 <a href={`mailto:${SUPPORT_EMAIL}`} className={`inline-flex items-center gap-x-2 ${linkClass}`}>
                   <Mail size={15} />
                   {SUPPORT_EMAIL}
+                </a>
+              </li>
+              <li>
+                <a href={`mailto:${HELLO_EMAIL}`} className={`inline-flex items-center gap-x-2 ${linkClass}`}>
+                  <Mail size={15} />
+                  {HELLO_EMAIL}
                 </a>
               </li>
             </ul>

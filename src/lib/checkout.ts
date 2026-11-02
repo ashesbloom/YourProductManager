@@ -5,6 +5,7 @@ import { PRODUCTS } from '@/data/catalog'
 import { api, ApiError, loadScript } from '@/lib/api'
 import { track } from '@/lib/analytics'
 import { useMe } from '@/lib/me'
+import { SUPPORT_EMAIL } from '@/lib/links'
 
 type CheckoutOrder = { orderId: string; amount: number; keyId: string; name: string; prefill: { email: string; name: string } }
 type RazorpayResult = { razorpay_order_id: string; razorpay_payment_id: string; razorpay_signature: string }
@@ -63,7 +64,7 @@ export function useCheckout() {
             await queryClient.invalidateQueries({ queryKey: ['me'] })
             navigate('/dashboard')
           } catch {
-            setError('Payment received, but access is still being set up. Refresh in a minute; if it persists, contact support with your payment ID.')
+            setError(`Payment received, but access is still being set up. Refresh in a minute; if it persists, email ${SUPPORT_EMAIL} with your payment ID.`)
             setBusy(false)
           }
         },

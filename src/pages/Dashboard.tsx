@@ -7,6 +7,7 @@ import { api, ApiError } from '@/lib/api'
 import { certDate, resumeLecture, useMe, useProgress, type Me } from '@/lib/me'
 import { CertificateCard, LockedCertificate } from '@/components/CertificateCard'
 import { BuyButton } from '@/components/CourseOfferCard'
+import { SUPPORT_EMAIL } from '@/lib/links'
 import { btnPrimary } from '@/components/ui'
 
 const card = 'rounded-2xl border border-white/10 bg-[#0d0d14] p-5 md:p-6'
@@ -169,7 +170,7 @@ function ProfileSection({ me }: { me: Me }) {
             autoComplete="name"
             className="block h-12 w-full rounded-xl border border-white/10 bg-white/5 px-4 text-white focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30 disabled:opacity-60"
           />
-          {locked && <p className="mt-2 text-xs text-white/45">Locked because your certificate has been issued. Contact support to correct it.</p>}
+          {locked && <p className="mt-2 text-xs text-white/45">Locked because your certificate has been issued. Write to {SUPPORT_EMAIL} to correct it.</p>}
         </div>
         <div>
           <span className="mb-2 block text-sm font-semibold text-white/75">Email</span>
