@@ -3,13 +3,14 @@ import { useEffect, useRef, useState } from 'react'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import {
   ArrowUpRight, BadgeCheck, Brain, CheckCircle, Compass, Cpu, Download, Linkedin, Plus, Star,
-  MessageCircle, TrendingUp, UserCheck,
+  MessageCircle, PenLine, TrendingUp, UserCheck,
 } from 'lucide-react'
 import { LockedCertificate } from '../components/CertificateCard'
 import { Book3D } from '../components/Book3D'
 import { KINDLE_URL } from '../data/book'
 import { CourseOfferCard } from '../components/CourseOfferCard'
 import { CALENDLY_URL, whatsappLink } from '../lib/links'
+import { WriteReviewButton } from '../components/ReviewDialog'
 import { track } from '../lib/analytics'
 import { PRODUCTS, formatINR } from '../data/catalog'
 
@@ -439,6 +440,29 @@ export default function Home() {
               </figure>
             )
           })}
+        </div>
+
+        {/* ─── Submit a Review Callout ─── */}
+        <div
+          data-reveal
+          className="mt-8 flex flex-col items-start justify-between gap-6 rounded-3xl border border-purple-400/20 bg-linear-to-br from-purple-950/40 via-[#0e0818] to-black p-6 sm:flex-row sm:items-center sm:p-8"
+        >
+          <div>
+            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-purple-300">
+              <PenLine size={14} />
+              <span>Share your story</span>
+            </div>
+            <h3 className="mt-2 font-['Montserrat'] text-lg font-bold text-white sm:text-xl">
+              Learned with YPM or coached with Khushbu?
+            </h3>
+            <p className="mt-1.5 max-w-xl text-sm leading-relaxed text-white/60">
+              We’d love to hear how YPM helped your journey. Share a quick written review to inspire others.
+            </p>
+          </div>
+          <WriteReviewButton className="btn-secondary shrink-0 inline-flex items-center gap-2">
+            <PenLine size={15} />
+            Write a review
+          </WriteReviewButton>
         </div>
       </section>
 

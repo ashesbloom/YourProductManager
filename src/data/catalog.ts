@@ -132,7 +132,7 @@ export const COURSE_INCLUDED: Array<{ strong?: string; text: string }> = [
   { strong: '2-hour free', text: 'mock interview session' },
   { text: 'Personal dashboard for each user' },
   { text: 'Resume review by a mentor' },
-  { strong: '50% off', text: 'personalised sessions if you want' },
+  { strong: '50% off', text: 'on personalised sessions (if needed)' },
   { text: 'Certificate after course completion' },
   { text: 'First AI PM lecture free to preview' },
 ]

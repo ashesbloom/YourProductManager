@@ -1,7 +1,8 @@
 import { Link } from 'react-router-dom'
-import { ArrowUpRight, Instagram, Linkedin, Mail, MessageCircle, Phone, Youtube } from 'lucide-react'
+import { ArrowUpRight, Instagram, Linkedin, Mail, MessageCircle, PenLine, Phone, Youtube } from 'lucide-react'
 import { Logo } from '@/components/Logo'
 import { CALENDLY_URL, HELLO_EMAIL, SUPPORT_EMAIL, WHATSAPP_URL } from '@/lib/links'
+import { WriteReviewButton } from '@/components/ReviewDialog'
 
 const columns = [
   {
@@ -110,6 +111,12 @@ export function Footer() {
                   <Mail size={15} />
                   {HELLO_EMAIL}
                 </a>
+              </li>
+              <li>
+                <WriteReviewButton className={`inline-flex items-center gap-x-2 ${linkClass}`}>
+                  <PenLine size={15} />
+                  Write a review
+                </WriteReviewButton>
               </li>
             </ul>
           </div>

@@ -439,3 +439,14 @@ test('uploads: base64 matches Node for large files; PDF and image types come fro
   assert.equal(imageType(new TextEncoder().encode('RIFF\0\0\0\0WEBPVP8 ')), 'image/webp')
   assert.equal(imageType(new TextEncoder().encode('%PDF-1.7')), null)
 })
+
+import { linkedinUrl } from './email.ts'
+test('review: only LinkedIn profile links are kept', () => {
+  assert.equal(linkedinUrl('https://www.linkedin.com/in/asha'), 'https://www.linkedin.com/in/asha')
+  assert.equal(linkedinUrl('linkedin.com/in/asha'), 'https://linkedin.com/in/asha')
+  assert.equal(linkedinUrl('https://lnkd.in/abc'), 'https://lnkd.in/abc')
+  assert.equal(linkedinUrl(''), null)
+  assert.equal(linkedinUrl('https://evil.com/linkedin.com'), null)
+  assert.equal(linkedinUrl('https://linkedin.com.evil.com/in/x'), null)
+  assert.equal(linkedinUrl('javascript:alert(1)'), null)
+})

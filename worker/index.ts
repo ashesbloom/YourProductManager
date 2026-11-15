@@ -1,5 +1,5 @@
 import { googleCallback, googleStart, logout, me, sendOtp, verifyOtp } from './auth.ts'
-import { contact } from './email.ts'
+import { contact, review } from './email.ts'
 import { HttpError, json } from './http.ts'
 import { getProgress, media, saveProgress } from './media.ts'
 import { checkout, checkoutVerify, webhook } from './pay.ts'
@@ -87,6 +87,8 @@ async function route(req: Request, env: Env, ctx: ExecutionContext): Promise<Res
         return await adminUploadSignature(req, env)
       case 'DELETE /api/admin/signature':
         return await adminDeleteSignature(req, env)
+      case 'POST /api/review':
+        return await review(req, env)
       case 'POST /api/contact':
         return await contact(req, env)
       case 'POST /api/progress':

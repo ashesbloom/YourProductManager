@@ -1,4 +1,4 @@
-import { CONTACT_EMAIL, SUPPORT_EMAIL } from '../src/lib/links.ts'
+import { CONTACT_EMAIL, HELLO_EMAIL, SUPPORT_EMAIL } from '../src/lib/links.ts'
 import { HttpError, json, readJson } from './http.ts'
 import { isEmail } from './lib.ts'
 
@@ -53,5 +53,51 @@ export async function contact(req: Request, env: Env): Promise<Response> {
     .run()
   if (!slot.meta.changes) throw new HttpError(429, `Too many messages right now. Please email ${SUPPORT_EMAIL} directly.`)
   await sendEmail(env, topic === 'Courses' ? SUPPORT_EMAIL : CONTACT_EMAIL, `[${topic}] Enquiry from ${name}`, `${message}\n\n— ${name} <${email}>`, email)
+  return json({ ok: true })
+}
+
+const REVIEWS_PER_HOUR = 10
+
+/** Linkedin profile links only; anything else is dropped rather than emailed on. */
+export function linkedinUrl(v: unknown): string | null {
+  if (typeof v !== 'string' || !v.trim()) return null
+  try {
+    const u = new URL(v.trim().startsWith('http') ? v.trim() : `https://${v.trim()}`)
+    const ok = u.protocol === 'https:' && (u.hostname === 'linkedin.com' || u.hostname.endsWith('.linkedin.com') || u.hostname === 'lnkd.in')
+    return ok ? u.href : null
+  } catch {
+    return null
+  }
+}
+
+/** "Write a review" → saved as an event (for a later approve-to-homepage step) and emailed to hello@. */
+export async function review(req: Request, env: Env): Promise<Response> {
+  const body = await readJson(req)
+  if (body.website) return json({ ok: true }) // honeypot, as on the contact form
+  const str = (v: unknown, max: number) => (typeof v === 'string' ? v.trim().slice(0, max) : '')
+  const name = str(body.name, 80).replace(/\s+/g, ' ')
+  const role = str(body.role, 80).replace(/\s+/g, ' ')
+  const text = str(body.review, 3000)
+  const rating = Number(body.rating)
+  const linkedin = linkedinUrl(body.linkedin)
+  if (name.length < 2 || !role || text.length < 10 || !Number.isInteger(rating) || rating < 1 || rating > 5) {
+    throw new HttpError(400, 'Please add your name, background, a star rating and a few words.')
+  }
+  if (body.linkedin && !linkedin) throw new HttpError(400, 'That LinkedIn link doesn’t look right. Leave it empty or paste your profile link.')
+  const now = Date.now()
+  const data = { name, role, rating, review: text, linkedin }
+  const slot = await env.DB.prepare(
+    `INSERT INTO events(user_id, type, data, at) SELECT NULL, 'review', ?, ?
+     WHERE (SELECT COUNT(*) FROM events WHERE type = 'review' AND at > ?) < ?`,
+  )
+    .bind(JSON.stringify(data), now, now - 3_600_000, REVIEWS_PER_HOUR)
+    .run()
+  if (!slot.meta.changes) throw new HttpError(429, `Too many reviews right now. Please email ${HELLO_EMAIL} instead.`)
+  await sendEmail(
+    env,
+    HELLO_EMAIL,
+    `New review: ${'★'.repeat(rating)}${'☆'.repeat(5 - rating)} from ${name}`,
+    `${name} (${role}) left a ${rating}/5 review on the website:\n\n${text}\n\nLinkedIn: ${linkedin ?? 'not given'}`,
+  )
   return json({ ok: true })
 }
